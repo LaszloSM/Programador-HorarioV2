@@ -1,0 +1,188 @@
+import { useState } from 'react'
+import { useScheduleStore } from '../../store/scheduleStore'
+
+const GROUPS = ['CAJAS', 'GESTION', 'PGC', 'OTROS', 'AUSENTE']
+const CONTRACT_OPTIONS = [36, 42, 44]
+
+export default function ConfigModal({ onClose }) {
+  const config = useScheduleStore(s => s.config)
+  const applyConfig = useScheduleStore(s => s.applyConfig)
+
+  const [employees, setEmployees] = useState(config.employees.map(e => ({ ...e })))
+  const [tasks, setTasks] = useState(config.tasks.map(t => ({ ...t })))
+  const [groupColors, setGroupColors] = useState({ ...config.groupColors })
+  const [saving, setSaving] = useState(false)
+  const [activeSection, setActiveSection] = useState('employees')
+
+  const addEmployee = () => setEmployees(prev => [...prev, { name: '', maxHours: 44, jefatura: false }])
+  const removeEmployee = (i) => setEmployees(prev => prev.filter((_, idx) => idx !== i))
+  const updateEmployee = (i, field, val) => setEmployees(prev =>
+    prev.map((e, idx) => idx === i ? { ...e, [field]: val } : e)
+  )
+
+  const addTask = () => setTasks(prev => [...prev, { name: '', group: 'CAJAS' }])
+  const removeTask = (i) => setTasks(prev => prev.filter((_, idx) => idx !== i))
+  const updateTask = (i, field, val) => setTasks(prev =>
+    prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t)
+  )
+
+  const handleSave = async () => {
+    setSaving(true)
+    const filteredEmployees = employees.filter(e => e.name.trim())
+    const employeeMaxHours = {}
+    filteredEmployees.forEach(e => { employeeMaxHours[e.name] = e.maxHours })
+    await applyConfig({
+      ...config,
+      employees: filteredEmployees,
+      tasks: tasks.filter(t => t.name.trim()),
+      groupColors,
+      initialPending: config.initialPending,
+      employeeMaxHours,
+    })
+    setSaving(false)
+    onClose()
+  }
+
+  const SECTIONS = [
+    { id: 'employees', label: 'Empleados' },
+    { id: 'tasks', label: 'Tareas' },
+    { id: 'colors', label: 'Colores' },
+  ]
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-borde">
+          <h2 className="text-azul font-semibold text-lg">Configuración</h2>
+          <button onClick={onClose} className="text-muted hover:text-azul text-xl">×</button>
+        </div>
+
+        {/* Section tabs */}
+        <div className="flex border-b border-borde px-6">
+          {SECTIONS.map(s => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id)}
+              className={`py-2 px-4 text-sm border-b-2 transition-colors ${
+                activeSection === s.id ? 'border-azul text-azul font-semibold' : 'border-transparent text-muted hover:text-azul'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {/* Employees */}
+          {activeSection === 'employees' && (
+            <div className="space-y-2">
+              {employees.map((emp, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 bg-azul-50 rounded-lg">
+                  <input
+                    value={emp.name}
+                    onChange={e => updateEmployee(i, 'name', e.target.value)}
+                    placeholder="Nombre del empleado"
+                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
+                  />
+                  <select
+                    value={emp.maxHours}
+                    onChange={e => updateEmployee(i, 'maxHours', Number(e.target.value))}
+                    className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
+                  >
+                    {CONTRACT_OPTIONS.map(h => <option key={h} value={h}>{h}h</option>)}
+                  </select>
+                  <label className="flex items-center gap-1 text-xs text-muted cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={emp.jefatura}
+                      onChange={e => updateEmployee(i, 'jefatura', e.target.checked)}
+                      className="rounded"
+                    />
+                    Jefatura
+                  </label>
+                  <button onClick={() => removeEmployee(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
+                </div>
+              ))}
+              <button
+                onClick={addEmployee}
+                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
+              >
+                + Agregar empleado
+              </button>
+            </div>
+          )}
+
+          {/* Tasks */}
+          {activeSection === 'tasks' && (
+            <div className="space-y-2">
+              {tasks.map((task, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 bg-azul-50 rounded-lg">
+                  <input
+                    value={task.name}
+                    onChange={e => updateTask(i, 'name', e.target.value)}
+                    placeholder="Nombre de la tarea"
+                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
+                  />
+                  <select
+                    value={task.group}
+                    onChange={e => updateTask(i, 'group', e.target.value)}
+                    className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
+                  >
+                    {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                  <button onClick={() => removeTask(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
+                </div>
+              ))}
+              <button
+                onClick={addTask}
+                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
+              >
+                + Agregar tarea
+              </button>
+            </div>
+          )}
+
+          {/* Colors */}
+          {activeSection === 'colors' && (
+            <div className="space-y-3">
+              {GROUPS.filter(g => g !== 'AUSENTE').map(group => (
+                <div key={group} className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-azul w-24">{group}</span>
+                  <input
+                    type="color"
+                    value={groupColors[group] ?? '#CBD5E1'}
+                    onChange={e => setGroupColors(prev => ({ ...prev, [group]: e.target.value }))}
+                    className="w-10 h-8 rounded border border-borde cursor-pointer"
+                  />
+                  <div
+                    className="flex-1 h-8 rounded-lg"
+                    style={{ backgroundColor: groupColors[group] ?? '#CBD5E1' }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-2 px-6 py-4 border-t border-borde">
+          <button onClick={onClose} className="flex-1 bg-azul-50 text-azul border border-borde rounded-lg py-2 text-sm hover:bg-blue-100">
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 bg-azul text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-900 disabled:opacity-50"
+          >
+            {saving ? 'Guardando...' : 'Guardar configuración'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

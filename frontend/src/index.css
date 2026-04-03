@@ -1,0 +1,31 @@
+/* Google Fonts - Inter (must come before all other rules) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+@import "tailwindcss";
+
+/* Colores Metro Riohacha */
+@theme {
+  --color-azul: #0E3B75;
+  --color-azul-50: #E8F0FB;
+  --color-azul-100: #D1E3F7;
+  --color-borde: #C5D6E3;
+  --color-danger: #E31C1B;
+  --color-muted: #596B86;
+  --color-card: #FFFFFF;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #F4F7FB;
+  color: #1a2a3a;
+}
+
+#root {
+  min-height: 100vh;
+}
