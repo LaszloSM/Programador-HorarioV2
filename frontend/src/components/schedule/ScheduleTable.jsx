@@ -50,6 +50,7 @@ export default function ScheduleTable() {
   const [editModal, setEditModal] = useState(null) // { empName, dateKey }
   const [activeId, setActiveId] = useState(null)
   const [contextMenu, setContextMenu] = useState(null) // { x, y, empName, dateKey } | null
+  const [filterGroup, setFilterGroup] = useState('Todos')
 
   const config = useScheduleStore(s => s.config)
   const moveShift = useScheduleStore(s => s.moveShift)
@@ -99,7 +100,22 @@ export default function ScheduleTable() {
   }
   const goToday = () => setWeekStart(getMonday(new Date()))
 
-  const employees = config.employees
+  const taskGroupMap = useScheduleStore(s => s.getTaskGroupMap())
+  const globalSchedule = useScheduleStore(s => s.globalSchedule)
+
+  const filteredEmployees = useMemo(() => {
+    let list = config.employees
+    if (filterGroup !== 'Todos') {
+      list = list.filter(emp => {
+        return dates.some(date => {
+          const dk = toISO(date)
+          const entry = globalSchedule[emp.name]?.[dk]
+          return entry?.task && taskGroupMap[entry.task] === filterGroup
+        })
+      })
+    }
+    return list
+  }, [config.employees, filterGroup, dates, globalSchedule, taskGroupMap])
 
   return (
     <DndContext
@@ -111,13 +127,27 @@ export default function ScheduleTable() {
       <div className="bg-white rounded-2xl shadow-sm border border-borde overflow-hidden">
         {/* Header: date navigation */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-borde bg-azul-50">
-          <div className="flex items-center gap-2">
-            <button onClick={prevWeek} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">‹</button>
-            <span className="text-azul font-semibold text-sm">
-              {weekStart.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} —{' '}
-              {weekEnd.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </span>
-            <button onClick={nextWeek} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">›</button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button onClick={prevWeek} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">‹</button>
+              <span className="text-azul font-semibold text-sm">
+                {weekStart.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} —{' '}
+                {weekEnd.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+              <button onClick={nextWeek} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">›</button>
+            </div>
+            {/* Filter group */}
+            <div className="flex items-center gap-2 border-l border-borde pl-4">
+              <span className="text-xs text-muted font-medium">Grupo:</span>
+              <select
+                value={filterGroup}
+                onChange={e => setFilterGroup(e.target.value)}
+                className="border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul text-azul font-medium"
+              >
+                <option value="Todos">Todos</option>
+                {(config.groups || []).map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
           </div>
           <button onClick={goToday} className="text-xs text-azul border border-borde px-3 py-1 rounded-lg hover:bg-azul-50">
             Hoy
@@ -147,14 +177,16 @@ export default function ScheduleTable() {
               </tr>
             </thead>
             <tbody>
-              {employees.length === 0 ? (
+              {filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={dates.length + 3} className="text-center text-muted text-sm py-12">
-                    No hay empleados configurados. Abre Configuración para agregar empleados.
+                    {config.employees.length === 0 
+                      ? 'No hay empleados configurados. Abre Configuración para agregar empleados.'
+                      : 'No hay empleados con turnos para este grupo en esta semana.'}
                   </td>
                 </tr>
               ) : (
-                employees.map(emp => {
+                filteredEmployees.map(emp => {
                   const hours = computeWeeklyHours(emp.name, weekStart, weekEnd)
                   const poliv = computeWeeklyPoliv(emp.name, weekStart, weekEnd)
                   const overHours = hours > emp.maxHours

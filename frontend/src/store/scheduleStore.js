@@ -9,6 +9,7 @@ const SCHEDULE_KEY = 'globalSchedule'
 const DEFAULT_CONFIG = {
   employees: [],
   initialPending: {},
+  groups: ['CAJAS', 'GESTION', 'PGC', 'OTROS', 'AUSENTE'],
   tasks: [
     {name:"Devoluciones",group:"GESTION"},{name:"Inventarios",group:"GESTION"},{name:"Precios",group:"GESTION"},{name:"Vencimientos",group:"GESTION"},
     {name:"Linea de cajas",group:"CAJAS"},{name:"Platos preparados",group:"CAJAS"},
@@ -39,6 +40,7 @@ export const useScheduleStore = create((set, get) => {
     globalSchedule: {},   // { [empName]: { [dateKey]: ShiftEntry } }
     config: {
       employees: [],         // [{ name, maxHours, jefatura }]
+      groups: [],            // ['CAJAS', ...]
       tasks: [],             // [{ name, group }]
       groupColors: {},       // { groupName: colorHex }
       initialPending: {},    // { empName: { 'YYYY-MM': number } }
@@ -229,6 +231,12 @@ export const useScheduleStore = create((set, get) => {
               ...mergedConfig.groupColors,
               ...(cfg.groupColors || {})
             }
+            // Merge groups
+            if (cfg.groups) {
+              cfg.groups.forEach(g => {
+                if (!mergedConfig.groups.includes(g)) mergedConfig.groups.push(g)
+              })
+            }
             // Merge schedule
             for (const [empName, daysMap] of Object.entries(sched)) {
               if (!rawSchedule[empName]) rawSchedule[empName] = {}
@@ -261,6 +269,11 @@ export const useScheduleStore = create((set, get) => {
 
         const groupColors = mergedConfig.groupColors || {}
         const initialPending = mergedConfig.initialPending || {}
+        let groups = mergedConfig.groups || []
+        if (groups.length === 0) {
+          // Backward compatibility: derive from tasks
+          groups = Array.from(new Set(tasks.map(t => t.group).filter(Boolean)))
+        }
 
         // Build employeeMaxHours map for compat
         const employeeMaxHours = {}
@@ -268,7 +281,7 @@ export const useScheduleStore = create((set, get) => {
 
         set({
           globalSchedule: rawSchedule,
-          config: { employees, tasks, groupColors, initialPending, employeeMaxHours },
+          config: { employees, groups, tasks, groupColors, initialPending, employeeMaxHours },
           isDirty: false,
           historyStack: [],
         })
@@ -291,6 +304,7 @@ export const useScheduleStore = create((set, get) => {
           maxHours: e.maxHours,
           jefatura: e.jefatura,
         })),
+        groups: newConfig.groups || [],
         tasks: newConfig.tasks.map(t => ({
           name: t.name,
           group: t.group,

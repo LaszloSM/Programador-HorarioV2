@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 
-const GROUPS = ['CAJAS', 'GESTION', 'PGC', 'OTROS', 'AUSENTE']
+import UsersTab from './UsersTab'
+
 const CONTRACT_OPTIONS = [36, 42, 44]
 
 export default function ConfigModal({ onClose }) {
@@ -10,7 +11,13 @@ export default function ConfigModal({ onClose }) {
 
   const [employees, setEmployees] = useState(config.employees.map(e => ({ ...e })))
   const [tasks, setTasks] = useState(config.tasks.map(t => ({ ...t })))
-  const [groupColors, setGroupColors] = useState({ ...config.groupColors })
+  const [groups, setGroups] = useState(
+    (config.groups || []).map(g => ({
+      originalName: g,
+      name: g,
+      color: config.groupColors[g] ?? '#CBD5E1'
+    }))
+  )
   const [initialPending, setInitialPending] = useState({ ...config.initialPending })
   const [saving, setSaving] = useState(false)
   const [activeSection, setActiveSection] = useState('employees')
@@ -27,16 +34,49 @@ export default function ConfigModal({ onClose }) {
     prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t)
   )
 
+  const addGroup = () => setGroups(prev => [...prev, { name: '', originalName: null, color: '#CBD5E1' }])
+  const removeGroup = (i) => setGroups(prev => prev.filter((_, idx) => idx !== i))
+  const updateGroup = (i, field, val) => setGroups(prev => {
+    const next = [...prev]
+    if (field === 'name') {
+      const oldName = next[i].name
+      const newName = val
+      setTasks(prevTasks => prevTasks.map(t => t.group === oldName ? { ...t, group: newName } : t))
+    }
+    next[i][field] = val
+    return next
+  })
+
   const handleSave = async () => {
     setSaving(true)
     const filteredEmployees = employees.filter(e => e.name.trim())
     const employeeMaxHours = {}
     filteredEmployees.forEach(e => { employeeMaxHours[e.name] = e.maxHours })
+
+    const finalGroups = []
+    const finalColors = {}
+    const renameMap = {}
+
+    groups.forEach(g => {
+      const finalName = g.name.trim() || 'Nuevo Grupo'
+      finalGroups.push(finalName)
+      finalColors[finalName] = g.color
+      if (g.originalName && g.originalName !== finalName) {
+        renameMap[g.originalName] = finalName
+      }
+    })
+
+    const finalTasks = tasks.filter(t => t.name.trim()).map(t => ({
+       ...t,
+       group: renameMap[t.group] || t.group
+    }))
+
     await applyConfig({
       ...config,
       employees: filteredEmployees,
-      tasks: tasks.filter(t => t.name.trim()),
-      groupColors,
+      tasks: finalTasks,
+      groups: finalGroups,
+      groupColors: finalColors,
       initialPending,
       employeeMaxHours,
     })
@@ -45,10 +85,11 @@ export default function ConfigModal({ onClose }) {
   }
 
   const SECTIONS = [
-    { id: 'employees', label: 'Empleados' },
+    { id: 'employees', label: 'Empleados y horas' },
+    { id: 'compensatorios', label: 'Compensatorios iniciales' },
     { id: 'tasks', label: 'Tareas' },
-    { id: 'colors', label: 'Colores' },
-    { id: 'compensatorios', label: 'Comp. Iniciales' },
+    { id: 'groups', label: 'Grupos (nombre & color)' },
+    { id: 'users', label: 'Usuarios (admin)' },
   ]
 
   return (
@@ -135,7 +176,10 @@ export default function ConfigModal({ onClose }) {
                     onChange={e => updateTask(i, 'group', e.target.value)}
                     className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
                   >
-                    {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                    {groups.map(g => {
+                       const gName = g.name.trim() || 'Nuevo Grupo'
+                       return <option key={gName} value={gName}>{gName}</option>
+                    })}
                   </select>
                   <button onClick={() => removeTask(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
                 </div>
@@ -149,24 +193,36 @@ export default function ConfigModal({ onClose }) {
             </div>
           )}
 
-          {/* Colors */}
-          {activeSection === 'colors' && (
-            <div className="space-y-3">
-              {GROUPS.filter(g => g !== 'AUSENTE').map(group => (
-                <div key={group} className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-azul w-24">{group}</span>
+          {/* Groups */}
+          {activeSection === 'groups' && (
+            <div className="space-y-2">
+              {groups.map((group, i) => (
+                <div key={i} className="flex items-center gap-3 p-2 bg-azul-50 rounded-lg">
+                  <input
+                    value={group.name}
+                    onChange={e => updateGroup(i, 'name', e.target.value)}
+                    placeholder="Nombre del grupo"
+                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
+                  />
                   <input
                     type="color"
-                    value={groupColors[group] ?? '#CBD5E1'}
-                    onChange={e => setGroupColors(prev => ({ ...prev, [group]: e.target.value }))}
+                    value={group.color}
+                    onChange={e => updateGroup(i, 'color', e.target.value)}
                     className="w-10 h-8 rounded border border-borde cursor-pointer"
                   />
                   <div
-                    className="flex-1 h-8 rounded-lg"
-                    style={{ backgroundColor: groupColors[group] ?? '#CBD5E1' }}
+                    className="flex-1 h-8 rounded-lg max-w-[100px]"
+                    style={{ backgroundColor: group.color }}
                   />
+                  <button onClick={() => removeGroup(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
                 </div>
               ))}
+              <button
+                onClick={addGroup}
+                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
+              >
+                + Añadir grupo
+              </button>
             </div>
           )}
 
@@ -212,6 +268,9 @@ export default function ConfigModal({ onClose }) {
               )}
             </div>
           )}
+
+          {/* Users */}
+          {activeSection === 'users' && <UsersTab />}
         </div>
 
         {/* Footer */}

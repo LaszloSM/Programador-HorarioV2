@@ -5,12 +5,13 @@ import { useScheduleSync } from '../../hooks/useScheduleSync'
 import Navbar from './Navbar'
 import ScheduleTable from '../schedule/ScheduleTable'
 import CoverageChart from '../schedule/CoverageChart'
+import DailyCoverageGantt from '../schedule/DailyCoverageGantt'
 import MonthlySummary from '../summary/MonthlySummary'
 import CompensatoriosPanel from '../summary/CompensatoriosPanel'
 import ConfigModal from '../admin/ConfigModal'
 import DepartmentManager from '../admin/DepartmentManager'
 
-const TABS = ['Horarios', 'Cobertura', 'Resumen Mensual', 'Compensatorios']
+const TABS = ['Horarios', 'Cobertura Día', 'Cobertura Hora', 'Resumen Mensual', 'Compensatorios']
 
 export default function AppShell({ session }) {
   const [activeTab, setActiveTab] = useState('Horarios')
@@ -99,7 +100,8 @@ export default function AppShell({ session }) {
 
       <main className="flex-1 p-4">
         {activeTab === 'Horarios' && <ScheduleTable />}
-        {activeTab === 'Cobertura' && <CoverageChart />}
+        {activeTab === 'Cobertura Día' && <DailyCoverageGantt />}
+        {activeTab === 'Cobertura Hora' && <CoverageChart />}
         {activeTab === 'Resumen Mensual' && <MonthlySummary />}
         {activeTab === 'Compensatorios' && <CompensatoriosPanel />}
       </main>
