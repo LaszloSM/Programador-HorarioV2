@@ -7,7 +7,7 @@ import {
 } from '../../lib/shiftCodes'
 
 export default function EditShiftModal({ empName, dateKey, onClose }) {
-  const entry = useScheduleStore(s => s.globalSchedule[empName]?.[dateKey] ?? {})
+  const entry = useScheduleStore(s => s.globalSchedule[empName]?.[dateKey]) || {}
   const config = useScheduleStore(s => s.config)
   const setShift = useScheduleStore(s => s.setShift)
   const deleteShift = useScheduleStore(s => s.deleteShift)

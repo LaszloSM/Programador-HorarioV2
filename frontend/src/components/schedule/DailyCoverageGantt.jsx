@@ -24,7 +24,12 @@ export default function DailyCoverageGantt() {
   const [filterGroup, setFilterGroup] = useState(config.groups?.[0] || '')
 
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
-  const taskGroupMap = useScheduleStore(s => s.getTaskGroupMap())
+
+  const taskGroupMap = useMemo(() => {
+    const map = {}
+    config.tasks.forEach(t => { map[t.name] = t.group })
+    return map
+  }, [config.tasks])
 
   // Process data for the selected day
   const data = useMemo(() => {

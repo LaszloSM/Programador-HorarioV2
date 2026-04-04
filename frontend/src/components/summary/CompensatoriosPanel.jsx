@@ -84,44 +84,69 @@ export default function CompensatoriosPanel() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-borde overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-borde bg-azul-50">
-        <h2 className="text-azul font-semibold text-base capitalize">{monthLabel}</h2>
-        <div className="flex gap-2">
-          <button onClick={prevMonth} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">‹</button>
-          <button onClick={nextMonth} className="text-azul hover:bg-azul-100 px-2 py-1 rounded text-sm">›</button>
+    <div className="bg-white rounded-3xl shadow-premium border border-borde/50 overflow-hidden backdrop-blur-xl">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-borde/50 bg-gradient-to-r from-azul-50 to-white">
+        <h2 className="text-slate-800 font-bold text-lg capitalize font-display tracking-tight flex items-center gap-3">
+          <span className="w-2.5 h-6 bg-gradient-to-b from-sky-400 to-blue-600 rounded-full inline-block shadow-sm"></span>
+          {monthLabel}
+        </h2>
+        <div className="flex gap-1 bg-white border border-borde rounded-xl p-1 shadow-sm">
+          <button onClick={prevMonth} className="text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-4 py-1.5 rounded-lg transition-colors font-semibold text-sm">Anterior</button>
+          <div className="w-px bg-borde/60 mx-1"></div>
+          <button onClick={nextMonth} className="text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-4 py-1.5 rounded-lg transition-colors font-semibold text-sm">Siguiente</button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto p-0">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-azul-50 border-b border-borde">
-              <th className="text-left text-xs font-semibold text-muted px-4 py-2">Empleado</th>
-              <th className="text-center text-xs font-semibold text-muted px-3 py-2" title="Saldo inicial">Inicial</th>
-              <th className="text-center text-xs font-semibold text-muted px-3 py-2" title="Días causados en festivos">Causados</th>
-              <th className="text-center text-xs font-semibold text-muted px-3 py-2" title="Compensatorios pagados (código C)">Pagados</th>
-              <th className="text-center text-xs font-semibold text-muted px-3 py-2" title="Saldo final = Inicial + Causados - Pagados">Saldo</th>
+            <tr className="bg-slate-50/80 border-b border-borde/50 text-slate-500 uppercase tracking-wider">
+              <th className="text-left text-xs font-extrabold px-6 py-4">Empleado</th>
+              <th className="text-center text-xs font-extrabold px-4 py-4" title="Saldo inicial">Inicial</th>
+              <th className="text-center text-xs font-extrabold px-4 py-4" title="Días causados en festivos">Causados</th>
+              <th className="text-center text-xs font-extrabold px-4 py-4" title="Compensatorios pagados (código C)">Pagados</th>
+              <th className="text-center text-xs font-extrabold px-6 py-4" title="Saldo final = Inicial + Causados - Pagados">Saldo Final</th>
             </tr>
           </thead>
           <tbody>
             {config.employees.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center text-muted text-sm py-10">
+                <td colSpan={5} className="text-center text-slate-400 font-medium text-sm py-16 bg-slate-50/30">
                   No hay empleados configurados.
                 </td>
               </tr>
             ) : (
               rows.map(row => (
-                <tr key={row.empName} className="border-b border-borde hover:bg-azul-50/30">
-                  <td className="px-4 py-2">
-                    <span className="text-sm font-medium text-azul">{row.empName}</span>
+                <tr key={row.empName} className="border-b border-borde/30 hover:bg-sky-50/40 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-sky-700 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
+                        {row.empName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">{row.empName}</span>
+                    </div>
                   </td>
-                  <td className="text-center px-3 py-2 text-sm text-muted">{row.pendStart}</td>
-                  <td className="text-center px-3 py-2 text-sm text-azul font-medium">+{row.causeCount}</td>
-                  <td className="text-center px-3 py-2 text-sm text-danger">-{row.paidCount}</td>
-                  <td className="text-center px-3 py-2">
-                    <span className={`text-sm font-bold ${row.closure < 0 ? 'text-danger' : 'text-azul'}`}>
+                  <td className="text-center px-4 py-4">
+                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-slate-100 text-slate-600 font-semibold text-xs border border-slate-200/60">
+                      {row.pendStart}
+                    </span>
+                  </td>
+                  <td className="text-center px-4 py-4">
+                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-emerald-50 text-emerald-600 font-bold text-xs border border-emerald-200/60 shadow-sm">
+                      +{row.causeCount}
+                    </span>
+                  </td>
+                  <td className="text-center px-4 py-4">
+                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-rose-50 text-rose-600 font-bold text-xs border border-rose-200/60 shadow-sm">
+                      -{row.paidCount}
+                    </span>
+                  </td>
+                  <td className="text-center px-6 py-4">
+                    <span className={`inline-flex items-center justify-center min-w-[3rem] px-4 py-1.5 rounded-full font-bold text-sm shadow-sm border ${
+                      row.closure < 0 
+                      ? 'bg-gradient-to-r from-red-50 to-rose-50 text-red-600 border-red-200' 
+                      : 'bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 border-sky-200'
+                    }`}>
                       {row.closure}
                     </span>
                   </td>

@@ -67,8 +67,8 @@ export default function ConfigModal({ onClose }) {
     })
 
     const finalTasks = tasks.filter(t => t.name.trim()).map(t => ({
-       ...t,
-       group: renameMap[t.group] || t.group
+      ...t,
+      group: renameMap[t.group] || t.group
     }))
 
     await applyConfig({
@@ -110,9 +110,8 @@ export default function ConfigModal({ onClose }) {
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
-              className={`py-2 px-4 text-sm border-b-2 transition-colors ${
-                activeSection === s.id ? 'border-azul text-azul font-semibold' : 'border-transparent text-muted hover:text-azul'
-              }`}
+              className={`py-2 px-4 text-sm border-b-2 transition-colors ${activeSection === s.id ? 'border-azul text-azul font-semibold' : 'border-transparent text-muted hover:text-azul'
+                }`}
             >
               {s.label}
             </button>
@@ -177,8 +176,8 @@ export default function ConfigModal({ onClose }) {
                     className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
                   >
                     {groups.map(g => {
-                       const gName = g.name.trim() || 'Nuevo Grupo'
-                       return <option key={gName} value={gName}>{gName}</option>
+                      const gName = g.name.trim() || 'Nuevo Grupo'
+                      return <option key={gName} value={gName}>{gName}</option>
                     })}
                   </select>
                   <button onClick={() => removeTask(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>

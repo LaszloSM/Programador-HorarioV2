@@ -128,14 +128,14 @@ export default function UsersTab() {
           </button>
         </div>
 
-        <div className="overflow-auto border border-borde rounded-lg">
-          <table className="w-full text-sm text-left">
+        <div className="overflow-x-hidden border border-borde rounded-lg">
+          <table className="w-full text-sm text-left table-fixed">
             <thead className="bg-azul-50 text-xs text-muted border-b border-borde">
               <tr>
-                <th className="px-3 py-2 font-semibold">Email</th>
-                <th className="px-3 py-2 font-semibold">Departamento</th>
-                <th className="px-3 py-2 font-semibold">Rol</th>
-                <th className="px-3 py-2 font-semibold">Acciones</th>
+                <th className="w-[45%] px-3 py-2 font-semibold">Email</th>
+                <th className="w-[20%] px-3 py-2 font-semibold">Dpto</th>
+                <th className="w-[20%] px-3 py-2 font-semibold">Rol</th>
+                <th className="w-[15%] px-3 py-2 font-semibold text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -150,10 +150,12 @@ export default function UsersTab() {
                   const dName = departments.find(d => d.id === u.department_id)?.name || '-'
                   return (
                     <tr key={u.id} className="border-b border-borde/50 hover:bg-blue-50/20">
-                      <td className="px-3 py-2 text-azul break-all">{u.email}</td>
-                      <td className="px-3 py-2 text-muted truncate max-w-[120px]">{dName}</td>
-                      <td className="px-3 py-2">{u.role}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 text-azul truncate" title={u.email}>
+                        {u.email}
+                      </td>
+                      <td className="px-3 py-2 text-muted truncate" title={dName}>{dName}</td>
+                      <td className="px-3 py-2 capitalize truncate" title={u.app_metadata?.role || u.user_metadata?.role || u.role}>{u.app_metadata?.role || u.user_metadata?.role || u.role}</td>
+                      <td className="px-3 py-2 text-center">
                         <button onClick={() => handleDelete(u.id)} className="text-danger text-xs hover:underline">
                           Eliminar
                         </button>
