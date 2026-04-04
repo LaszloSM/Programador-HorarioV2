@@ -2,16 +2,19 @@ import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { SHIFT_CODE_INFO, absenceCodes, absenceLabels, computeEndTimeWithMargin } from '../../lib/shiftCodes'
 
-export default function ShiftCell({ empName, dateKey, onClick }) {
+export default function ShiftCell({ empName, dateKey, onClick, onContextMenu }) {
   const entry = useScheduleStore(s => s.globalSchedule[empName]?.[dateKey])
   const config = useScheduleStore(s => s.config)
   const copyShift = useScheduleStore(s => s.copyShift)
   const pasteShift = useScheduleStore(s => s.pasteShift)
 
+  const hasEntry = !(!entry || (!entry.duration && !entry.startTime && !entry.code))
+
   // DnD - draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: `${empName}__${dateKey}`,
     data: { empName, dateKey },
+    disabled: !hasEntry,
   })
 
   // DnD - droppable
@@ -55,12 +58,12 @@ export default function ShiftCell({ empName, dateKey, onClick }) {
     }
   }
 
-  if (!entry || (!entry.duration && !entry.startTime && !entry.code)) {
+  if (!hasEntry) {
     // Empty cell
     return (
       <div
-        ref={setRef}
-        onClick={onClick}
+        ref={setDropRef}
+        onClick={e => { e.stopPropagation(); onClick?.() }}
         className={`h-16 border border-borde rounded-lg cursor-pointer hover:bg-azul-50 transition-colors flex items-center justify-center ${isOver ? 'bg-azul-100 border-azul' : 'bg-white'}`}
       >
         <span className="text-muted text-xs">+</span>
@@ -74,12 +77,16 @@ export default function ShiftCell({ empName, dateKey, onClick }) {
       {...listeners}
       {...attributes}
       onClick={onClick}
+      onContextMenu={e => { e.preventDefault(); onContextMenu?.(e.clientX, e.clientY, empName, dateKey) }}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      className={`h-16 rounded-lg cursor-pointer transition-all select-none relative overflow-hidden ${
+      className={`h-16 rounded-lg transition-all select-none relative overflow-hidden ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isOver ? 'ring-2 ring-azul' : ''}`}
-      style={{ backgroundColor: isAbsence ? '#EAEAEA' : (taskColor ?? '#E0E7FF') }}
+      style={{
+        backgroundColor: isAbsence ? '#EAEAEA' : (taskColor ?? '#E0E7FF'),
+        cursor: isDragging ? 'grabbing' : 'grab',
+      }}
     >
       {/* Color accent top strip */}
       {!isAbsence && taskColor && (

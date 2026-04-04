@@ -11,6 +11,7 @@ export default function ConfigModal({ onClose }) {
   const [employees, setEmployees] = useState(config.employees.map(e => ({ ...e })))
   const [tasks, setTasks] = useState(config.tasks.map(t => ({ ...t })))
   const [groupColors, setGroupColors] = useState({ ...config.groupColors })
+  const [initialPending, setInitialPending] = useState({ ...config.initialPending })
   const [saving, setSaving] = useState(false)
   const [activeSection, setActiveSection] = useState('employees')
 
@@ -36,7 +37,7 @@ export default function ConfigModal({ onClose }) {
       employees: filteredEmployees,
       tasks: tasks.filter(t => t.name.trim()),
       groupColors,
-      initialPending: config.initialPending,
+      initialPending,
       employeeMaxHours,
     })
     setSaving(false)
@@ -47,6 +48,7 @@ export default function ConfigModal({ onClose }) {
     { id: 'employees', label: 'Empleados' },
     { id: 'tasks', label: 'Tareas' },
     { id: 'colors', label: 'Colores' },
+    { id: 'compensatorios', label: 'Comp. Iniciales' },
   ]
 
   return (
@@ -165,6 +167,49 @@ export default function ConfigModal({ onClose }) {
                   />
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Compensatorios Iniciales */}
+          {activeSection === 'compensatorios' && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted">
+                Saldo inicial de compensatorios al inicio del mes base. Si un empleado inicia con días a favor, introduce aquí su balance de partida.
+              </p>
+              {employees.filter(e => e.name.trim()).length === 0 ? (
+                <p className="text-sm text-muted text-center py-4">
+                  Agrega empleados primero en la pestaña "Empleados".
+                </p>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-borde">
+                      <th className="text-left text-xs font-semibold text-muted pb-2">Empleado</th>
+                      <th className="text-center text-xs font-semibold text-muted pb-2">Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employees.filter(e => e.name.trim()).map((emp, i) => (
+                      <tr key={i} className="border-b border-borde/50">
+                        <td className="py-2 text-sm text-azul">{emp.name}</td>
+                        <td className="py-2 text-center">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={initialPending[emp.name] ?? 0}
+                            onChange={e => setInitialPending(prev => ({
+                              ...prev,
+                              [emp.name]: parseInt(e.target.value) || 0
+                            }))}
+                            className="w-20 border border-borde rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-1 focus:ring-azul"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
         </div>

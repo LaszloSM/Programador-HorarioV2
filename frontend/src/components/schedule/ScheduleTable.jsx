@@ -8,6 +8,18 @@ import { useComputePoliv } from '../../hooks/useComputePoliv'
 import { isHoliday } from '../../lib/shiftCodes'
 import ShiftCell from './ShiftCell'
 import EditShiftModal from './EditShiftModal'
+import ContextMenu from './ContextMenu'
+
+function DragPreviewCard({ empName, dateKey }) {
+  const entry = useScheduleStore(s => s.globalSchedule[empName]?.[dateKey])
+  if (!entry) return null
+  const label = entry.code || entry.duration || '?'
+  return (
+    <div className="h-16 w-24 rounded-lg bg-azul text-white flex items-center justify-center shadow-xl opacity-90 text-sm font-bold">
+      {label}
+    </div>
+  )
+}
 
 function getWeekDates(startDate) {
   const dates = []
@@ -36,9 +48,15 @@ const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 export default function ScheduleTable() {
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()))
   const [editModal, setEditModal] = useState(null) // { empName, dateKey }
+  const [activeId, setActiveId] = useState(null)
+  const [contextMenu, setContextMenu] = useState(null) // { x, y, empName, dateKey } | null
 
   const config = useScheduleStore(s => s.config)
   const moveShift = useScheduleStore(s => s.moveShift)
+  const copyShift = useScheduleStore(s => s.copyShift)
+  const pasteShift = useScheduleStore(s => s.pasteShift)
+  const deleteShift = useScheduleStore(s => s.deleteShift)
+  const clipboardEntry = useScheduleStore(s => s.clipboardEntry)
 
   const { computeWeeklyHours } = useComputeHours()
   const { computeWeeklyPoliv } = useComputePoliv()
@@ -53,11 +71,20 @@ export default function ScheduleTable() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
+  const handleDragStart = ({ active }) => {
+    setActiveId(active.id)
+  }
+
   const handleDragEnd = ({ active, over }) => {
+    setActiveId(null)
     if (!over || active.id === over.id) return
     const src = active.data.current
     const dst = over.data.current
     if (src && dst) moveShift(src.empName, src.dateKey, dst.empName, dst.dateKey)
+  }
+
+  const handleContextMenu = (x, y, empName, dateKey) => {
+    setContextMenu({ x, y, empName, dateKey })
   }
 
   const prevWeek = () => {
@@ -75,7 +102,12 @@ export default function ScheduleTable() {
   const employees = config.employees
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="bg-white rounded-2xl shadow-sm border border-borde overflow-hidden">
         {/* Header: date navigation */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-borde bg-azul-50">
@@ -143,6 +175,7 @@ export default function ScheduleTable() {
                               empName={emp.name}
                               dateKey={dateKey}
                               onClick={() => setEditModal({ empName: emp.name, dateKey })}
+                              onContextMenu={handleContextMenu}
                             />
                           </td>
                         )
@@ -173,6 +206,29 @@ export default function ScheduleTable() {
           onClose={() => setEditModal(null)}
         />
       )}
+
+      {/* Context menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          empName={contextMenu.empName}
+          dateKey={contextMenu.dateKey}
+          canPaste={!!clipboardEntry}
+          onCopy={() => copyShift(contextMenu.empName, contextMenu.dateKey)}
+          onPaste={() => pasteShift(contextMenu.empName, contextMenu.dateKey)}
+          onDelete={() => deleteShift(contextMenu.empName, contextMenu.dateKey)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Drag Overlay */}
+      <DragOverlay dropAnimation={null}>
+        {activeId ? (() => {
+          const [empName, dateKey] = activeId.split('__')
+          return <DragPreviewCard empName={empName} dateKey={dateKey} />
+        })() : null}
+      </DragOverlay>
     </DndContext>
   )
 }

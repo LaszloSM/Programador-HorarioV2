@@ -11,11 +11,9 @@ function previousMonthKey(key) {
 function computeCompensatorios(empName, monthKey, globalSchedule, config, baseMonth, cache = {}) {
   if (cache[`${empName}__${monthKey}`] !== undefined) return cache[`${empName}__${monthKey}`]
 
-  const initialPending = config.initialPending?.[empName] ?? {}
-
   let pendStart = 0
   if (monthKey === baseMonth) {
-    pendStart = initialPending[monthKey] ?? 0
+    pendStart = config.initialPending?.[empName] ?? 0
   } else {
     const prevKey = previousMonthKey(monthKey)
     if (prevKey < baseMonth) {
