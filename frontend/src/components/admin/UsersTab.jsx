@@ -20,9 +20,23 @@ export default function UsersTab() {
     try {
       const { data, error } = await supabase.functions.invoke('admin-list-users')
       if (error) throw error
-      setUsers(data?.users || [])
+      
+      const authUsers = data?.users || []
+      
+      const { data: profiles } = await supabase.from('profiles').select('id, department_id, role')
+      
+      const merged = authUsers.map(u => {
+        const prof = profiles?.find(p => p.id === u.id)
+        return {
+          ...u,
+          department_id: prof?.department_id || u.user_metadata?.department_id || u.app_metadata?.department_id || null,
+          display_role: prof?.role || u.app_metadata?.role || u.user_metadata?.role || u.role || 'basic'
+        }
+      })
+      
+      setUsers(merged)
     } catch (err) {
-      setMsg(`Error listando usuarios localmente: ${err.message}`)
+      setMsg(`Error listando usuarios: ${err.message}`)
       setUsers([])
     } finally {
       setLoading(false)
@@ -60,6 +74,29 @@ export default function UsersTab() {
       loadUsers()
     } catch (err) {
       setMsg(`Error eliminando: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdate = async (id, field, value) => {
+    setLoading(true)
+    setMsg('')
+    try {
+      const { error: edgeError } = await supabase.functions.invoke('admin-update-user', { 
+        body: { id, [field]: value } 
+      })
+      
+      if (edgeError) {
+         console.warn("Edge function falló, intentando actualizar tabla profiles directo", edgeError);
+         const { error: profError } = await supabase.from('profiles').update({ [field]: value }).eq('id', id)
+         if (profError) throw profError
+      }
+      
+      setMsg('Usuario actualizado.')
+      loadUsers()
+    } catch (err) {
+      setMsg(`Error actualizando: ${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -132,9 +169,9 @@ export default function UsersTab() {
           <table className="w-full text-sm text-left table-fixed">
             <thead className="bg-azul-50 text-xs text-muted border-b border-borde">
               <tr>
-                <th className="w-[45%] px-3 py-2 font-semibold">Email</th>
-                <th className="w-[20%] px-3 py-2 font-semibold">Dpto</th>
-                <th className="w-[20%] px-3 py-2 font-semibold">Rol</th>
+                <th className="w-[35%] px-3 py-2 font-semibold">Email</th>
+                <th className="w-[25%] px-3 py-2 font-semibold">Dpto</th>
+                <th className="w-[25%] px-3 py-2 font-semibold">Rol</th>
                 <th className="w-[15%] px-3 py-2 font-semibold text-center">Acciones</th>
               </tr>
             </thead>
@@ -147,14 +184,32 @@ export default function UsersTab() {
                 </tr>
               ) : (
                 users.map(u => {
-                  const dName = departments.find(d => d.id === u.department_id)?.name || '-'
                   return (
                     <tr key={u.id} className="border-b border-borde/50 hover:bg-blue-50/20">
                       <td className="px-3 py-2 text-azul truncate" title={u.email}>
                         {u.email}
                       </td>
-                      <td className="px-3 py-2 text-muted truncate" title={dName}>{dName}</td>
-                      <td className="px-3 py-2 capitalize truncate" title={u.app_metadata?.role || u.user_metadata?.role || u.role}>{u.app_metadata?.role || u.user_metadata?.role || u.role}</td>
+                      <td className="px-3 py-2">
+                        <select
+                           value={u.department_id || ''}
+                           onChange={e => handleUpdate(u.id, 'department_id', e.target.value || null)}
+                           className="w-full bg-transparent border border-borde rounded px-1 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-azul text-muted"
+                        >
+                           <option value="">(sin dpto)</option>
+                           {departments.map(d => <option key={d.id} value={d.id} className="text-black">{d.name}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                           value={(u.display_role || 'basic').toLowerCase()}
+                           onChange={e => handleUpdate(u.id, 'role', e.target.value)}
+                           className="w-full bg-transparent border border-borde rounded px-1 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-azul text-muted"
+                        >
+                          <option value="basic" className="text-black">Basic</option>
+                          <option value="gerente" className="text-black">Gerente</option>
+                          <option value="admin" className="text-black">Administrador</option>
+                        </select>
+                      </td>
                       <td className="px-3 py-2 text-center">
                         <button onClick={() => handleDelete(u.id)} className="text-danger text-xs hover:underline">
                           Eliminar
