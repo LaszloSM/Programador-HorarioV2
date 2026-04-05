@@ -13,11 +13,9 @@ export default function Navbar({
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-tr from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <span className="text-white text-sm font-black font-display tracking-wider">MR</span>
-          </div>
+          <img src="/icon-192.png" alt="Metro Riohacha" className="w-9 h-9 rounded-lg shadow-lg shadow-sky-500/20" />
           <span className="font-display font-semibold text-base hidden sm:block tracking-wide">
-            Planificador de Horarios
+            Programador Metro
           </span>
         </div>
 
