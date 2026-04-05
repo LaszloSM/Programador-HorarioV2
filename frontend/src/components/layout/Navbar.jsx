@@ -20,8 +20,8 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Department selector — admin only (dropdown) */}
-          {isAdmin && departments.length > 0 && (
+          {/* Department selector — admin y gerente (dropdown) */}
+          {(isAdmin || isGerente) && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
               onChange={e => onDeptChange(e.target.value === '' ? null : e.target.value)}
@@ -32,12 +32,6 @@ export default function Navbar({
                 <option key={d.id} value={d.id} className="text-slate-900">{d.name}</option>
               ))}
             </select>
-          )}
-          {/* Gerente: etiqueta estática sin dropdown */}
-          {isGerente && (
-            <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
-              Todos los departamentos
-            </span>
           )}
           {/* Show department name for regular users */}
           {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
