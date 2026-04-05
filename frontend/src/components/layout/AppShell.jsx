@@ -18,7 +18,6 @@ export default function AppShell({ session }) {
   const [departments, setDepartments] = useState([])
   const [userDeptId, setUserDeptId] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isGerente, setIsGerente] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [showDepts, setShowDepts] = useState(false)
 
@@ -26,7 +25,6 @@ export default function AppShell({ session }) {
   const currentDeptId = useScheduleStore(s => s.currentDeptId)
   const isDirty = useScheduleStore(s => s.isDirty)
   const isSaving = useScheduleStore(s => s.isSaving)
-  const isLoading = useScheduleStore(s => s.isLoading)
   const saveError = useScheduleStore(s => s.saveError)
   const clearSaveError = useScheduleStore(s => s.clearSaveError)
 
@@ -55,11 +53,9 @@ export default function AppShell({ session }) {
         .eq('id', session.user.id)
         .single()
 
-      const role = profile?.role || session.user.app_metadata?.role
-      const admin = role === 'admin'
-      const gerente = role === 'gerente'
+      const admin = profile?.role === 'admin' ||
+        session.user.app_metadata?.role === 'admin'
       setIsAdmin(admin)
-      setIsGerente(gerente)
 
       // Load departments list
       const { data: depts } = await supabase
@@ -68,8 +64,8 @@ export default function AppShell({ session }) {
         .order('name')
       setDepartments(depts ?? [])
 
-      // Load user's department or 'Todos' if admin or gerente
-      const deptId = (admin || gerente) ? null : (profile?.department_id ?? depts?.[0]?.id)
+      // Load user's department or 'Todos' if admin
+      const deptId = admin ? null : (profile?.department_id ?? depts?.[0]?.id)
       setUserDeptId(deptId)
       loadDepartment(deptId)
     }
@@ -95,7 +91,6 @@ export default function AppShell({ session }) {
         saveError={saveError}
         onClearError={clearSaveError}
         isAdmin={isAdmin}
-        isGerente={isGerente}
         activeTab={activeTab}
         tabs={TABS}
         onTabChange={setActiveTab}
@@ -103,15 +98,7 @@ export default function AppShell({ session }) {
         onOpenDepts={() => setShowDepts(true)}
       />
 
-      <main className="flex-1 p-4 relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white/90 p-4 rounded-xl shadow-lg border border-sky-100 flex items-center gap-3 text-sky-900 font-medium">
-              <div className="w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-              Cargando datos...
-            </div>
-          </div>
-        )}
+      <main className="flex-1 p-4">
         {activeTab === 'Horarios' && <ScheduleTable />}
         {activeTab === 'Cobertura Día' && <DailyCoverageGantt />}
         {activeTab === 'Cobertura Hora' && <CoverageChart />}
