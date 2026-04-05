@@ -2,7 +2,7 @@ import { useScheduleStore } from '../../store/scheduleStore'
 
 export default function Navbar({
   session, departments, currentDeptId, onDeptChange, onLogout,
-  isDirty, isSaving, saveError, onClearError, isAdmin,
+  isDirty, isSaving, saveError, onClearError, isAdmin, isGerente,
   activeTab, tabs, onTabChange, onOpenConfig, onOpenDepts
 }) {
   const undoLastAction = useScheduleStore(s => s.undoLastAction)
@@ -20,8 +20,8 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Department selector — admin only */}
-          {isAdmin && departments.length > 0 && (
+          {/* Department selector — admin and gerente only */}
+          {(isAdmin || isGerente) && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
               onChange={e => onDeptChange(e.target.value === '' ? null : e.target.value)}
@@ -33,8 +33,8 @@ export default function Navbar({
               ))}
             </select>
           )}
-          {/* Show department name for non-admin */}
-          {!isAdmin && currentDeptId && departments.length > 0 && (
+          {/* Show department name for non-admin/gerente */}
+          {!(isAdmin || isGerente) && currentDeptId && departments.length > 0 && (
             <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
               {departments.find(d => d.id === currentDeptId)?.name ?? ''}
             </span>

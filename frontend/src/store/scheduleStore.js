@@ -53,6 +53,7 @@ export const useScheduleStore = create((set, get) => {
     baseMonth: '2025-08',
     isDirty: false,
     isSaving: false,
+    isLoading: false,
     saveError: null,
     clipboardEntry: null,   // { entry, empName } for copy-paste
 
@@ -79,7 +80,9 @@ export const useScheduleStore = create((set, get) => {
     // ─── Actions ────────────────────────────────────────────
 
     setShift: (empName, dateKey, entry) => {
+      if (get().isLoading) return;
       set(state => {
+        if (state.isLoading) return state;
         const prev = state.globalSchedule[empName]?.[dateKey] ?? {}
         const newSchedule = {
           ...state.globalSchedule,
@@ -100,7 +103,9 @@ export const useScheduleStore = create((set, get) => {
     },
 
     deleteShift: (empName, dateKey) => {
+      if (get().isLoading) return;
       set(state => {
+        if (state.isLoading) return state;
         const prev = state.globalSchedule[empName]?.[dateKey] ?? {}
         const empSchedule = { ...(state.globalSchedule[empName] ?? {}) }
         delete empSchedule[dateKey]
@@ -121,12 +126,15 @@ export const useScheduleStore = create((set, get) => {
     },
 
     pasteShift: (empName, dateKey) => {
+      if (get().isLoading) return;
       const { clipboardEntry } = get()
       if (clipboardEntry) get().setShift(empName, dateKey, { ...clipboardEntry })
     },
 
     moveShift: (srcEmp, srcDateKey, dstEmp, dstDateKey) => {
+      if (get().isLoading) return;
       set(state => {
+        if (state.isLoading) return state;
         const srcEntry = state.globalSchedule[srcEmp]?.[srcDateKey] ?? {}
         const dstEntry = state.globalSchedule[dstEmp]?.[dstDateKey] ?? {}
         const newSchedule = {
@@ -166,7 +174,7 @@ export const useScheduleStore = create((set, get) => {
 
     // ─── Load department from app_state (same as app.html) ──
     loadDepartment: async (deptId) => {
-      set({ currentDeptId: deptId, globalSchedule: {}, historyStack: [] })
+      set({ currentDeptId: deptId, globalSchedule: {}, historyStack: [], isLoading: true })
 
       try {
         let query = supabase
@@ -182,6 +190,7 @@ export const useScheduleStore = create((set, get) => {
 
         if (error) {
           console.error('Error loading department:', error)
+          set({ isLoading: false })
           return
         }
 
@@ -284,9 +293,11 @@ export const useScheduleStore = create((set, get) => {
           config: { employees, groups, tasks, groupColors, initialPending, employeeMaxHours },
           isDirty: false,
           historyStack: [],
+          isLoading: false
         })
       } catch (err) {
         console.error('loadDepartment error:', err)
+        set({ isLoading: false })
       }
     },
 
@@ -323,6 +334,7 @@ export const useScheduleStore = create((set, get) => {
 
     // ─── Internal: flush debounced saves to app_state ──────
     _flushSave: async () => {
+      if (get().isLoading) return
       const { globalSchedule, currentDeptId } = get()
       if (!currentDeptId) return
 
