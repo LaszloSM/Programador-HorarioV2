@@ -105,7 +105,7 @@ export default function AppShell({ session }) {
 
       <main className="flex-1 p-4 relative">
         {isLoading && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-white/90 p-4 rounded-xl shadow-lg border border-sky-100 flex items-center gap-3 text-sky-900 font-medium">
               <div className="w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
               Cargando datos...
