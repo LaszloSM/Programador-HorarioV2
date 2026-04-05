@@ -1,14 +1,26 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { isHoliday } from '../../lib/shiftCodes'
 import { computeMonthlySummaryData, exportToExcel } from '../../lib/monthlySummary'
 
 const ABSENCE_CODES = new Set(['C','D','I','S','V','DF','LC','F','B'])
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
 export default function MonthlySummary() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
+  const isMobile = useIsMobile()
 
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
   const config = useScheduleStore(s => s.config)
@@ -43,80 +55,104 @@ export default function MonthlySummary() {
     return headers
   }, [year, month, summary.daysInMonth])
 
-  const th = 'text-center text-[10px] font-semibold px-1 py-1'
-  const td = 'text-center text-[10px] px-1 py-1 border-b border-borde/50'
+  const th = 'text-center text-[10px] font-black px-1 py-2 uppercase tracking-tighter'
+  const td = 'text-center text-[10px] px-1 py-1.5 border-b border-nm-outline-variant/10'
 
   return (
-    <div className="space-y-6">
-      {/* ── Header bar ────────────────────────── */}
-      <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-borde px-4 py-3">
+    <div className={`p-0 ${isMobile ? 'space-y-0' : 'space-y-8'}`}>
+      {/* ── Custom Header ────────────────────────── */}
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isMobile ? 'p-4 bg-nm-surface-low border-b border-nm-outline-variant' : ''}`}>
         <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="text-azul hover:bg-azul-50 px-2 py-1 rounded text-sm">‹</button>
-          <span className="text-azul font-semibold text-sm capitalize">{monthLabel}</span>
-          <button onClick={nextMonth} className="text-azul hover:bg-azul-50 px-2 py-1 rounded text-sm">›</button>
+            <button
+               onClick={prevMonth}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+            >
+              ‹
+            </button>
+            <div className="flex-1 min-w-[140px] px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center">
+               <span className="text-sm font-black text-nm-on-surface tracking-tight">
+                 {monthLabel}
+               </span>
+            </div>
+            <button
+               onClick={nextMonth}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+            >
+              ›
+            </button>
         </div>
+        
         <button
           onClick={handleExport}
-          className="bg-azul text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-900 transition-colors"
+          className="flex items-center justify-center gap-2 bg-nm-primary text-white text-xs font-bold px-6 py-3 rounded-xl hover:shadow-lg active:scale-[0.98] transition-all shadow-md overflow-hidden relative group"
         >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
           Exportar Excel
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
         </button>
       </div>
 
-      {/* ── TABLA 1: Cuadrícula mensual ────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-borde overflow-hidden">
-        <div className="px-4 py-2 border-b border-borde bg-azul-50">
-          <h3 className="text-azul font-semibold text-sm">Programación mensual</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="border-collapse" style={{ fontSize: '10px', minWidth: `${200 + summary.daysInMonth * 28}px` }}>
+      {/* ── Table 1 Container ────────────────────────── */}
+      <div className={`bg-transparent md:bg-white md:rounded-3xl shadow-premium border-b md:border border-borde/50 overflow-hidden ${isMobile ? '' : 'backdrop-blur-xl'}`}>
+        {!isMobile && (
+          <div className="bg-azul-50/30 border-b border-borde/50 px-6 py-4">
+            <h3 className="text-azul font-black text-sm uppercase tracking-widest">Cuadrícula de Programación</h3>
+          </div>
+        )}
+
+        <div className={`overflow-x-auto scrollbar-hide ${isMobile ? 'pb-4' : ''}`}>
+          <table className="border-collapse w-full" style={{ fontSize: '10px', minWidth: `${200 + summary.daysInMonth * 28}px` }}>
             <thead>
-              <tr className="bg-azul-50">
-                <th className={`${th} text-left px-3 sticky left-0 bg-azul-50 z-10 w-32`}>Nombre</th>
-                <th className={`${th} w-12`}>Poliv.</th>
-                <th className={`${th} w-10`}>Pend.</th>
+              <tr className="bg-nm-surface-container">
+                <th className={`${th} text-left px-4 sticky left-0 bg-nm-surface-container z-40 w-32 border-r border-nm-outline-variant/30 text-nm-primary`}>Nombre</th>
+                <th className={`${th} w-10 border-r border-nm-outline-variant/30 text-nm-on-surface-variant`}>Pol.</th>
+                <th className={`${th} w-8 border-r border-nm-outline-variant/30 text-nm-on-surface-variant`}>Pend.</th>
                 {dayHeaders.map(({ d, fest, weekday }) => (
                   <th
                     key={d}
-                    className={`${th} w-7 ${fest ? 'text-danger bg-red-50' : 'text-muted'}`}
+                    className={`${th} w-7 font-black ${fest ? 'text-red-500 bg-red-500/5' : 'text-nm-on-surface-variant'}`}
                   >
-                    <div>{weekday}</div>
-                    <div className={`font-bold ${fest ? 'text-danger' : 'text-azul'}`}>{String(d).padStart(2,'0')}</div>
+                    <div className="text-[8px] opacity-70">{weekday}</div>
+                    <div className={fest ? 'scale-110' : ''}>{String(d).padStart(2,'0')}</div>
                   </th>
                 ))}
-                <th className={`${th} w-16 bg-azul-50`}>Comp.<br/>Cierre</th>
+                <th className={`${th} w-12 bg-nm-surface-container sticky right-0 z-30 border-l border-nm-outline-variant/30 text-nm-primary`}>Saldo</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-nm-surface-low">
               {config.employees.length === 0 ? (
-                <tr><td colSpan={summary.daysInMonth + 4} className="text-center text-muted text-sm py-8">No hay empleados.</td></tr>
+                <tr><td colSpan={summary.daysInMonth + 4} className="text-center text-nm-on-surface-variant text-sm py-20 font-bold uppercase tracking-widest">No hay personal configurado.</td></tr>
               ) : (
                 <>
                   {summary.rows.map(row => (
-                    <tr key={row.emp} className="hover:bg-azul-50/20">
-                      <td className={`${td} text-left px-3 font-medium text-azul sticky left-0 bg-white z-10 max-w-[8rem] truncate`} title={row.emp}>{row.emp}</td>
-                      <td className={td}>{row.poliv}%</td>
-                      <td className={td}>{row.pend}</td>
+                    <tr key={row.emp} className="hover:bg-nm-surface-high group/row transition-colors">
+                      <td className={`${td} text-left px-4 font-black text-nm-on-surface sticky left-0 bg-nm-surface-low z-40 group-hover/row:bg-nm-surface-high border-r border-nm-outline-variant/30 truncate max-w-[8rem]`} title={row.emp}>{row.emp}</td>
+                      <td className={`${td} border-r border-nm-outline-variant/30 font-bold text-nm-on-surface-variant`}>{row.poliv}%</td>
+                      <td className={`${td} border-r border-nm-outline-variant/30 font-bold text-nm-on-surface-variant`}>{row.pend}</td>
                       {row.codes.map((code, i) => (
                         <td
                           key={i}
-                          className={`${td} ${ABSENCE_CODES.has(code) ? 'text-danger font-bold' : code !== '0' ? 'text-azul' : 'text-borde'}`}
+                          className={`${td} font-black ${ABSENCE_CODES.has(code) ? 'text-red-500' : code !== '0' ? 'text-nm-primary' : 'text-nm-on-surface-variant/20'}`}
                         >
-                          {code === '0' ? '' : code}
+                          {code === '0' ? '·' : code}
                         </td>
                       ))}
-                      <td className={`${td} font-bold ${row.closure < 0 ? 'text-danger' : 'text-azul'}`}>{row.closure}</td>
+                      <td className={`${td} font-black sticky right-0 z-30 bg-nm-surface-low group-hover/row:bg-nm-surface-high border-l border-nm-outline-variant/30 ${row.closure < 0 ? 'text-red-500' : 'text-nm-primary'}`}>
+                        {row.closure}
+                      </td>
                     </tr>
                   ))}
                   {/* Total row */}
-                  <tr className="bg-[#C2DDF2] font-bold">
-                    <td className={`${td} text-left px-3 sticky left-0 bg-[#C2DDF2] z-10`}>TOTAL</td>
-                    <td className={td}></td>
-                    <td className={td}>{summary.totalPend}</td>
+                  <tr className="bg-nm-surface-container font-black">
+                    <td className={`${td} text-left px-4 sticky left-0 bg-nm-surface-container z-40 border-r border-nm-outline-variant/30 text-nm-primary`} colSpan={1}>TOTALES</td>
+                    <td className={`${td} border-r border-nm-outline-variant/30`}></td>
+                    <td className={`${td} border-r border-nm-outline-variant/30 text-nm-on-surface`}>{summary.totalPend}</td>
                     {summary.dayCounts.map((count, i) => (
-                      <td key={i} className={td}>{count || ''}</td>
+                      <td key={i} className={td}>{count || '·'}</td>
                     ))}
-                    <td className={td}>{summary.totalClosure}</td>
+                    <td className={`${td} sticky right-0 z-30 bg-nm-surface-container border-l border-nm-outline-variant/30 text-nm-on-surface`}>{summary.totalClosure}</td>
                   </tr>
                 </>
               )}
@@ -125,44 +161,43 @@ export default function MonthlySummary() {
         </div>
       </div>
 
-      {/* ── TABLA 2: Compensatorios formato empresa ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-borde overflow-hidden">
-        <div className="px-4 py-2 border-b border-borde bg-azul-50">
-          <h3 className="text-azul font-semibold text-sm">Compensatorios — {monthLabel}</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse" style={{ fontSize: '11px' }}>
+      {/* ── Table 2: Compensatorios Format ────────────────────────── */}
+      <div className={`bg-transparent md:bg-white md:rounded-3xl shadow-premium border-b md:border border-borde/50 overflow-hidden ${isMobile ? 'mt-4 pb-20' : 'backdrop-blur-xl'}`}>
+        {!isMobile && (
+          <div className="bg-emerald-50/30 border-b border-emerald-100 px-6 py-4">
+            <h3 className="text-emerald-800 font-black text-sm uppercase tracking-widest">Resumen de Compensatorios</h3>
+          </div>
+        )}
+        <div className="overflow-x-auto scrollbar-hide">
+          <table className="w-full border-collapse" style={{ fontSize: '11px', minWidth: isMobile ? '700px' : 'auto' }}>
             <thead>
-              <tr className="bg-azul-50 border-b border-borde">
-                <th className={`${th} text-left px-3`}>NOMBRE</th>
-                <th className={th}>SALDO</th>
-                <th className={th}># CAUSADOS</th>
-                <th className={th}>FECHAS CAUSADAS</th>
-                <th className={th}># PAGADOS</th>
-                <th className={th}>FECHAS PAGADAS</th>
-                <th className={th}># PENDIENTE</th>
+              <tr className="bg-nm-surface-container/50 border-b border-nm-outline-variant/20">
+                <th className="text-left text-[10px] font-black px-6 py-4 text-nm-on-surface-variant uppercase">Nombre</th>
+                <th className="text-center text-[10px] font-black px-4 py-4 text-nm-on-surface-variant uppercase">Saldo</th>
+                <th className="text-center text-[10px] font-black px-4 py-4 text-nm-on-surface-variant uppercase">Causados</th>
+                <th className="text-left text-[10px] font-black px-4 py-4 text-nm-on-surface-variant uppercase">Detalle</th>
+                <th className="text-center text-[10px] font-black px-4 py-4 text-nm-on-surface-variant uppercase">Pagados</th>
+                <th className="text-center text-[10px] font-black px-4 py-4 text-nm-on-surface-variant uppercase">Final</th>
               </tr>
             </thead>
             <tbody>
               {config.employees.length === 0 ? (
-                <tr><td colSpan={7} className="text-center text-muted py-8">No hay empleados.</td></tr>
+                <tr><td colSpan={6} className="text-center text-nm-on-surface-variant py-8">N/A</td></tr>
               ) : (
                 <>
                   {summary.rows.map(row => (
-                    <tr key={row.emp} className="border-b border-borde/50 hover:bg-azul-50/20">
-                      <td className={`${td} text-left px-3 font-medium text-azul`}>{row.emp}</td>
-                      <td className={td}>{row.pend}</td>
-                      <td className={`${td} text-azul font-medium`}>{row.caused}</td>
-                      <td className={`${td} text-xs`}>{row.causedStr || '—'}</td>
-                      <td className={`${td} text-danger font-medium`}>{row.paid}</td>
-                      <td className={`${td} text-xs`}>{row.paidStr || '—'}</td>
-                      <td className={`${td} font-bold ${row.closure < 0 ? 'text-danger' : 'text-azul'}`}>{row.closure}</td>
+                    <tr key={row.emp} className="border-b border-nm-outline-variant/10 hover:bg-nm-surface-high transition-colors group/sec">
+                      <td className="px-6 py-3.5 font-black text-nm-on-surface">{row.emp}</td>
+                      <td className="text-center font-bold text-nm-on-surface-variant px-4">{row.pend}</td>
+                      <td className="text-center font-black text-nm-primary px-4 bg-nm-primary/5">+{row.caused}</td>
+                      <td className="px-4 text-[9px] text-nm-on-surface-variant max-w-[150px] truncate" title={row.causedStr}>{row.causedStr || '—'}</td>
+                      <td className="text-center font-black text-red-500 px-4 bg-red-500/5">-{row.paid}</td>
+                      <td className={`text-center font-black px-4 ${row.closure < 0 ? 'text-red-500' : 'text-nm-primary'}`}>{row.closure}</td>
                     </tr>
                   ))}
-                  {/* Total */}
-                  <tr className="bg-[#C2DDF2] font-bold border-t border-borde">
-                    <td className={`${td} text-left px-3`} colSpan={6}>TOTAL COMPENSATORIOS</td>
-                    <td className={td}>{summary.totalClosure}</td>
+                  <tr className="bg-nm-surface-container/30 font-black">
+                    <td className="px-6 py-4 text-nm-primary" colSpan={5}>TOTAL CIERRE MES</td>
+                    <td className={`text-center px-4 ${summary.totalClosure < 0 ? 'text-red-500' : 'text-nm-primary'}`}>{summary.totalClosure}</td>
                   </tr>
                 </>
               )}

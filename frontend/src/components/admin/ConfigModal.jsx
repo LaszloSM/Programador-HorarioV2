@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
-
 import UsersTab from './UsersTab'
 
 const CONTRACT_OPTIONS = [36, 42, 44]
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
 export default function ConfigModal({ onClose }) {
   const config = useScheduleStore(s => s.config)
   const applyConfig = useScheduleStore(s => s.applyConfig)
+  const isMobile = useIsMobile()
 
   const [employees, setEmployees] = useState(config.employees.map(e => ({ ...e })))
   const [tasks, setTasks] = useState(config.tasks.map(t => ({ ...t })))
@@ -28,13 +39,13 @@ export default function ConfigModal({ onClose }) {
     prev.map((e, idx) => idx === i ? { ...e, [field]: val } : e)
   )
 
-  const addTask = () => setTasks(prev => [...prev, { name: '', group: 'CAJAS' }])
+  const addTask = () => setTasks(prev => [...prev, { name: '', group: groups[0]?.name || 'CAJAS' }])
   const removeTask = (i) => setTasks(prev => prev.filter((_, idx) => idx !== i))
   const updateTask = (i, field, val) => setTasks(prev =>
     prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t)
   )
 
-  const addGroup = () => setGroups(prev => [...prev, { name: '', originalName: null, color: '#CBD5E1' }])
+  const addGroup = () => setGroups(prev => [...prev, { name: '', originalName: null, color: '#0ea5e9' }])
   const removeGroup = (i) => setGroups(prev => prev.filter((_, idx) => idx !== i))
   const updateGroup = (i, field, val) => setGroups(prev => {
     const next = [...prev]
@@ -85,186 +96,185 @@ export default function ConfigModal({ onClose }) {
   }
 
   const SECTIONS = [
-    { id: 'employees', label: 'Empleados y horas' },
-    { id: 'compensatorios', label: 'Compensatorios iniciales' },
-    { id: 'tasks', label: 'Tareas' },
-    { id: 'groups', label: 'Grupos (nombre & color)' },
-    { id: 'users', label: 'Usuarios (admin)' },
+    { id: 'employees', label: 'Personal', icon: '👤' },
+    { id: 'compensatorios', label: 'Saldos', icon: '⚖️' },
+    { id: 'tasks', label: 'Tareas', icon: '📋' },
+    { id: 'groups', label: 'Grupos', icon: '🎨' },
+    { id: 'users', label: 'Usuarios', icon: '🔑' },
   ]
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-nm-surface/90 backdrop-blur-lg flex items-center justify-center z-[100] p-0 md:p-4 overflow-hidden" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-5xl mx-auto max-h-[90vh] flex flex-col"
+        className={`bg-white md:rounded-3xl shadow-premium w-full max-w-5xl mx-auto h-full md:h-[90vh] flex flex-col transition-all transform ${isMobile ? 'rounded-none' : ''}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-borde">
-          <h2 className="text-azul font-semibold text-lg">Configuración</h2>
-          <button onClick={onClose} className="text-muted hover:text-azul text-xl">×</button>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-borde/50 bg-nm-surface-low">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-nm-primary/10 flex items-center justify-center text-xl">⚙️</div>
+             <h2 className="text-nm-on-surface font-black text-xl tracking-tight">Panel de Control</h2>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-nm-surface-high transition-colors text-2xl text-nm-on-surface-variant">×</button>
         </div>
 
-        {/* Section tabs */}
-        <div className="flex border-b border-borde px-6">
-          {SECTIONS.map(s => (
-            <button
-              key={s.id}
-              onClick={() => setActiveSection(s.id)}
-              className={`py-2 px-4 text-sm border-b-2 transition-colors ${activeSection === s.id ? 'border-azul text-azul font-semibold' : 'border-transparent text-muted hover:text-azul'
+        {/* Section tabs - Horizontal Scroll on Mobile */}
+        <div className="flex border-b border-borde/30 px-4 bg-white sticky top-0 z-10 overflow-x-auto scrollbar-hide">
+          <div className="flex min-w-max">
+            {SECTIONS.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setActiveSection(s.id)}
+                className={`py-4 px-5 text-xs font-black uppercase tracking-widest border-b-4 transition-all flex items-center gap-2 ${
+                   activeSection === s.id 
+                   ? 'border-nm-primary text-nm-primary bg-nm-primary/5' 
+                   : 'border-transparent text-nm-on-surface-variant hover:text-nm-on-surface'
                 }`}
-            >
-              {s.label}
-            </button>
-          ))}
+              >
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 bg-nm-surface-low">
           {/* Employees */}
           {activeSection === 'employees' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {employees.map((emp, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-azul-50 rounded-lg">
-                  <input
-                    value={emp.name}
-                    onChange={e => updateEmployee(i, 'name', e.target.value)}
-                    placeholder="Nombre del empleado"
-                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
-                  />
-                  <select
-                    value={emp.maxHours}
-                    onChange={e => updateEmployee(i, 'maxHours', Number(e.target.value))}
-                    className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
-                  >
-                    {CONTRACT_OPTIONS.map(h => <option key={h} value={h}>{h}h</option>)}
-                  </select>
-                  <label className="flex items-center gap-1 text-xs text-muted cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={emp.jefatura}
-                      onChange={e => updateEmployee(i, 'jefatura', e.target.checked)}
-                      className="rounded"
-                    />
-                    Jefatura
-                  </label>
-                  <button onClick={() => removeEmployee(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
+                <div key={i} className="flex gap-3 p-4 bg-white rounded-2xl shadow-sm border border-borde/50 items-center animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex-1 space-y-3">
+                     <div className="flex gap-2">
+                        <input
+                          value={emp.name}
+                          onChange={e => updateEmployee(i, 'name', e.target.value)}
+                          placeholder="Nombre del empleado"
+                          className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface focus:outline-none focus:ring-2 focus:ring-nm-primary/20"
+                        />
+                        <select
+                          value={emp.maxHours}
+                          onChange={e => updateEmployee(i, 'maxHours', Number(e.target.value))}
+                          className="bg-nm-surface-low border border-borde rounded-xl px-3 py-2.5 text-sm font-black text-nm-on-surface focus:outline-none"
+                        >
+                          {CONTRACT_OPTIONS.map(h => <option key={h} value={h}>{h}h</option>)}
+                        </select>
+                     </div>
+                     <label className="flex items-center gap-3 px-1 cursor-pointer group/chk">
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${emp.jefatura ? 'bg-nm-primary border-nm-primary' : 'border-nm-outline-variant/50'}`}>
+                           {emp.jefatura && <span className="text-white text-[10px]">✓</span>}
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={emp.jefatura}
+                          onChange={e => updateEmployee(i, 'jefatura', e.target.checked)}
+                          className="hidden"
+                        />
+                        <span className="text-xs font-black text-nm-on-surface-variant uppercase tracking-widest">Rol Jefatura</span>
+                      </label>
+                  </div>
+                  <button onClick={() => removeEmployee(i)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors">×</button>
                 </div>
               ))}
               <button
                 onClick={addEmployee}
-                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
+                className="w-full border-2 border-dashed border-nm-outline-variant/30 rounded-2xl py-4 text-xs font-black uppercase tracking-widest text-nm-on-surface-variant hover:border-nm-primary hover:text-nm-primary transition-all bg-white/50"
               >
-                + Agregar empleado
+                + Agregar Nuevo Personal
               </button>
             </div>
           )}
 
           {/* Tasks */}
           {activeSection === 'tasks' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {tasks.map((task, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-azul-50 rounded-lg">
+                <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm border border-borde/50 animate-in fade-in slide-in-from-bottom-2">
                   <input
                     value={task.name}
                     onChange={e => updateTask(i, 'name', e.target.value)}
-                    placeholder="Nombre de la tarea"
-                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
+                    placeholder="Eje: CAJA 01"
+                    className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface focus:outline-none"
                   />
                   <select
                     value={task.group}
                     onChange={e => updateTask(i, 'group', e.target.value)}
-                    className="border border-borde rounded px-2 py-1 text-sm focus:outline-none"
+                    className="bg-nm-surface-low border border-borde rounded-xl px-3 py-2.5 text-xs font-black uppercase text-nm-primary focus:outline-none max-w-[120px]"
                   >
                     {groups.map(g => {
                       const gName = g.name.trim() || 'Nuevo Grupo'
                       return <option key={gName} value={gName}>{gName}</option>
                     })}
                   </select>
-                  <button onClick={() => removeTask(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
+                  <button onClick={() => removeTask(i)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 text-xl">×</button>
                 </div>
               ))}
-              <button
-                onClick={addTask}
-                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
-              >
-                + Agregar tarea
-              </button>
+              <button onClick={addTask} className="w-full border-2 border-dashed border-nm-outline-variant/30 rounded-2xl py-4 text-xs font-black uppercase tracking-widest text-nm-on-surface-variant bg-white/50">+ Crear Tarea</button>
             </div>
           )}
 
           {/* Groups */}
           {activeSection === 'groups' && (
-            <div className="space-y-2">
-              {groups.map((group, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 bg-azul-50 rounded-lg">
+            <div className="space-y-3">
+              {groups.map((group, j) => (
+                <div key={j} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-borde/50">
                   <input
                     value={group.name}
-                    onChange={e => updateGroup(i, 'name', e.target.value)}
-                    placeholder="Nombre del grupo"
-                    className="flex-1 border border-borde rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-azul"
+                    onChange={e => updateGroup(j, 'name', e.target.value)}
+                    className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface"
                   />
-                  <input
-                    type="color"
-                    value={group.color}
-                    onChange={e => updateGroup(i, 'color', e.target.value)}
-                    className="w-10 h-8 rounded border border-borde cursor-pointer"
-                  />
-                  <div
-                    className="flex-1 h-8 rounded-lg max-w-[100px]"
-                    style={{ backgroundColor: group.color }}
-                  />
-                  <button onClick={() => removeGroup(i)} className="text-danger hover:text-red-700 text-lg leading-none">×</button>
+                  <div className="relative w-12 h-10 group/picker overflow-hidden rounded-xl border border-borde">
+                    <input
+                      type="color"
+                      value={group.color}
+                      onChange={e => updateGroup(j, 'color', e.target.value)}
+                      className="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer"
+                    />
+                  </div>
+                  <button onClick={() => removeGroup(j)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500">×</button>
                 </div>
               ))}
-              <button
-                onClick={addGroup}
-                className="w-full border-2 border-dashed border-borde rounded-lg py-2 text-sm text-muted hover:border-azul hover:text-azul transition-colors"
-              >
-                + Añadir grupo
-              </button>
+              <button onClick={addGroup} className="w-full border-2 border-dashed border-nm-outline-variant/30 rounded-2xl py-4 text-xs font-black uppercase tracking-widest text-nm-on-surface-variant bg-white/50">+ Nuevo Grupo</button>
             </div>
           )}
 
-          {/* Compensatorios Iniciales */}
+          {/* Initial Balances */}
           {activeSection === 'compensatorios' && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted">
-                Saldo inicial de compensatorios al inicio del mes base. Si un empleado inicia con días a favor, introduce aquí su balance de partida.
-              </p>
-              {employees.filter(e => e.name.trim()).length === 0 ? (
-                <p className="text-sm text-muted text-center py-4">
-                  Agrega empleados primero en la pestaña "Empleados".
-                </p>
-              ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-borde">
-                      <th className="text-left text-xs font-semibold text-muted pb-2">Empleado</th>
-                      <th className="text-center text-xs font-semibold text-muted pb-2">Saldo</th>
+            <div className="space-y-4">
+              <div className="bg-nm-primary/5 rounded-2xl p-4 border border-nm-primary/10">
+                 <p className="text-xs text-nm-on-surface-variant font-bold leading-relaxed">
+                   Introduce el balance inicial de cada empleado. Estos días se sumarán al cálculo automático del mes base.
+                 </p>
+              </div>
+              
+              <div className="bg-white rounded-2xl shadow-sm border border-borde/50 overflow-hidden">
+                <table className="w-full border-collapse">
+                  <thead className="bg-nm-surface-container">
+                    <tr>
+                      <th className="text-left text-[10px] font-black px-6 py-4 text-nm-on-surface-variant uppercase tracking-widest">Empleado</th>
+                      <th className="text-center text-[10px] font-black px-6 py-4 text-nm-on-surface-variant uppercase tracking-widest">Saldo Inicial</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-nm-outline-variant/10">
                     {employees.filter(e => e.name.trim()).map((emp, i) => (
-                      <tr key={i} className="border-b border-borde/50">
-                        <td className="py-2 text-sm text-azul">{emp.name}</td>
-                        <td className="py-2 text-center">
+                      <tr key={i}>
+                        <td className="px-6 py-4 text-sm font-bold text-nm-on-surface">{emp.name}</td>
+                        <td className="px-6 py-4 text-center">
                           <input
                             type="number"
-                            min="0"
-                            step="1"
                             value={initialPending[emp.name] ?? 0}
                             onChange={e => setInitialPending(prev => ({
                               ...prev,
                               [emp.name]: parseInt(e.target.value) || 0
                             }))}
-                            className="w-20 border border-borde rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-1 focus:ring-azul"
+                            className="w-24 bg-nm-surface-low border border-borde rounded-xl px-3 py-2 text-sm font-black text-center text-nm-primary focus:outline-none"
                           />
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
+              </div>
             </div>
           )}
 
@@ -273,16 +283,16 @@ export default function ConfigModal({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex gap-2 px-6 py-4 border-t border-borde">
-          <button onClick={onClose} className="flex-1 bg-azul-50 text-azul border border-borde rounded-lg py-2 text-sm hover:bg-blue-100">
+        <div className={`flex gap-3 px-6 py-6 border-t border-borde/50 bg-white ${isMobile ? 'pb-10' : ''}`}>
+          <button onClick={onClose} className="flex-1 bg-nm-surface-high text-nm-on-surface-variant font-black rounded-2xl py-4 text-xs uppercase tracking-widest hover:bg-nm-outline-variant/10 transition-colors">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 bg-azul text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-900 disabled:opacity-50"
+            className="flex-[2] bg-nm-primary text-white rounded-2xl py-4 text-sm font-black uppercase tracking-widest shadow-lg shadow-nm-primary/20 hover:shadow-xl active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {saving ? 'Guardando...' : 'Guardar configuración'}
+            {saving ? 'Guardando...' : 'Aplicar Cambios'}
           </button>
         </div>
       </div>

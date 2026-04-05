@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 
 export default function Navbar({
@@ -7,130 +8,197 @@ export default function Navbar({
 }) {
   const undoLastAction = useScheduleStore(s => s.undoLastAction)
   const historyStack = useScheduleStore(s => s.historyStack)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 text-white shadow-premium border-b border-sky-900/50">
+    <header className="app-header">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <img src="/icon-192.png" alt="Metro Riohacha" className="w-9 h-9 rounded-lg shadow-lg shadow-sky-500/20" />
-          <span className="font-display font-semibold text-base hidden sm:block tracking-wide">
-            Programador Metro
-          </span>
+      <div className="app-header__top">
+        {/* Brand */}
+        <div className="app-header__brand">
+          <img src="/icon-192.png" alt="Metro Riohacha" className="app-header__logo" />
+          <span className="app-header__title">Programador Metro</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Department selector — admin y gerente (dropdown) */}
+        {/* Desktop: All controls inline */}
+        <div className="app-header__controls app-header__controls--desktop">
+          {/* Department selector */}
           {(isAdmin || isGerente) && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
               onChange={e => onDeptChange(e.target.value === '' ? null : e.target.value)}
-              className="bg-white/10 backdrop-blur-md text-white border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all cursor-pointer"
+              className="app-header__dept-select"
             >
-              <option value="" className="text-slate-900">Todos los departamentos</option>
+              <option value="">Todos los departamentos</option>
               {departments.map(d => (
-                <option key={d.id} value={d.id} className="text-slate-900">{d.name}</option>
+                <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
           )}
-          {/* Show department name for regular users */}
           {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
-            <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
+            <span className="app-header__dept-label">
               {departments.find(d => d.id === currentDeptId)?.name ?? ''}
             </span>
           )}
 
           {/* Save status */}
-          <div className="flex items-center min-w-[80px] justify-end">
+          <div className="app-header__save-status">
             {isSaving && (
-              <span className="text-xs font-medium text-sky-300 animate-pulse flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-sky-300 rounded-full animate-ping"></span> Guardando
+              <span className="app-header__saving">
+                <span className="app-header__saving-dot" /> Guardando
               </span>
             )}
             {saveError && (
-              <button
-                onClick={onClearError}
-                className="text-xs bg-red-500/20 text-red-200 border border-red-500/50 px-2 py-1 rounded-md hover:bg-red-500/40 transition-colors"
-                title={saveError}
-              >
+              <button onClick={onClearError} className="app-header__error-btn" title={saveError}>
                 ⚠ Error
               </button>
             )}
             {isDirty && !isSaving && !saveError && (
-              <span className="text-xs text-sky-300 flex items-center gap-1" title="Cambios sin guardar">
-                <span className="w-1.5 h-1.5 bg-sky-400 rounded-full"></span> Pendiente
+              <span className="app-header__pending" title="Cambios sin guardar">
+                <span className="app-header__pending-dot" /> Pendiente
               </span>
             )}
           </div>
 
-          <div className="h-5 w-px bg-white/20 mx-1 hidden sm:block"></div>
+          <div className="app-header__divider" />
 
-          {/* Undo — oculto para gerente */}
+          {/* Undo */}
           {!isGerente && (
             <button
               onClick={undoLastAction}
               disabled={historyStack.length === 0}
               title="Deshacer (Ctrl+Z)"
-              className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all disabled:opacity-30 disabled:hover:bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-1"
+              className="app-header__btn"
             >
-              ↩ <span className="hidden sm:inline">Deshacer</span>
+              ↩ <span className="app-header__btn-label">Deshacer</span>
             </button>
           )}
 
-          {/* Configuración — admin only */}
+          {/* Config — admin only */}
           {isAdmin && (
-            <button
-              onClick={onOpenConfig}
-              title="Configuración"
-              className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all px-3 py-1.5 rounded-lg flex items-center gap-1"
-            >
-              ⚙ <span className="hidden sm:inline">Config</span>
+            <button onClick={onOpenConfig} title="Configuración" className="app-header__btn">
+              ⚙ <span className="app-header__btn-label">Config</span>
             </button>
           )}
 
-          {/* Departamentos (solo admin) */}
+          {/* Departments — admin only */}
           {isAdmin && (
-            <button
-              onClick={onOpenDepts}
-              title="Gestionar departamentos"
-              className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all px-3 py-1.5 rounded-lg"
-            >
+            <button onClick={onOpenDepts} title="Gestionar departamentos" className="app-header__btn">
               Depts
             </button>
           )}
 
-          <div className="h-5 w-px bg-white/20 mx-1 hidden sm:block"></div>
+          <div className="app-header__divider" />
 
           {/* User */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-sky-200 hidden sm:block">
-              {session.user.email}
-            </span>
-            <button
-              onClick={onLogout}
-              className="text-xs bg-sky-600 hover:bg-sky-500 border border-sky-500/50 shadow-md shadow-sky-900/20 text-white transition-all px-3 py-1.5 rounded-lg font-medium"
-            >
-              Salir
-            </button>
-          </div>
+          <span className="app-header__user-email">{session.user.email}</span>
+          <button onClick={onLogout} className="app-header__logout-btn">Salir</button>
+        </div>
+
+        {/* Mobile: compact controls */}
+        <div className="app-header__controls app-header__controls--mobile">
+          {/* Save status dot */}
+          {isSaving && <span className="app-header__saving-dot app-header__saving-dot--pulse" title="Guardando..." />}
+          {saveError && (
+            <button onClick={onClearError} className="app-header__error-btn--sm" title={saveError}>⚠</button>
+          )}
+          {isDirty && !isSaving && !saveError && (
+            <span className="app-header__pending-dot--sm" title="Cambios sin guardar" />
+          )}
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className="app-header__hamburger"
+            aria-label="Menú"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Tab navigation */}
-      <nav className="flex px-6 overflow-x-auto scrollbar-hide">
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div className="app-header__mobile-menu">
+          {/* Department selector for admin/gerente */}
+          {(isAdmin || isGerente) && departments.length > 0 && (
+            <div className="app-header__menu-item">
+              <span className="app-header__menu-label">Departamento</span>
+              <select
+                value={currentDeptId ?? ''}
+                onChange={e => { onDeptChange(e.target.value === '' ? null : e.target.value); setMenuOpen(false) }}
+                className="app-header__dept-select app-header__dept-select--menu"
+              >
+                <option value="">Todos</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
+            <div className="app-header__menu-item">
+              <span className="app-header__menu-label">Departamento</span>
+              <span className="app-header__dept-label">
+                {departments.find(d => d.id === currentDeptId)?.name ?? ''}
+              </span>
+            </div>
+          )}
+
+          {/* Undo */}
+          {!isGerente && (
+            <button
+              onClick={() => { undoLastAction(); setMenuOpen(false) }}
+              disabled={historyStack.length === 0}
+              className="app-header__menu-action"
+            >
+              ↩ Deshacer <span className="app-header__menu-shortcut">(Ctrl+Z)</span>
+            </button>
+          )}
+
+          {/* Config */}
+          {isAdmin && (
+            <button onClick={() => { onOpenConfig(); setMenuOpen(false) }} className="app-header__menu-action">
+              ⚙ Configuración
+            </button>
+          )}
+
+          {/* Departments */}
+          {isAdmin && (
+            <button onClick={() => { onOpenDepts(); setMenuOpen(false) }} className="app-header__menu-action">
+              🏢 Departamentos
+            </button>
+          )}
+
+          {/* User info & logout */}
+          <div className="app-header__menu-footer">
+            <span className="app-header__menu-email">{session.user.email}</span>
+            <button onClick={onLogout} className="app-header__logout-btn app-header__logout-btn--menu">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop tab navigation */}
+      <nav className="app-header__tabs app-header__tabs--desktop">
         {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => onTabChange(tab)}
-            className={`text-sm px-5 py-3 whitespace-nowrap transition-all duration-300 relative font-medium ${activeTab === tab
-                ? 'text-white'
-                : 'text-sky-200/70 hover:text-white hover:bg-white/5'
-              }`}
+            className={`app-header__tab ${activeTab === tab ? 'app-header__tab--active' : ''}`}
           >
             {tab}
-            {activeTab === tab && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-400 rounded-t-full shadow-[0_-2px_10px_rgba(56,189,248,0.8)]"></span>
-            )}
+            {activeTab === tab && <span className="app-header__tab-indicator" />}
           </button>
         ))}
       </nav>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { absenceCodes, absenceCodeToAbbr, isHoliday } from '../../lib/shiftCodes'
 
@@ -53,10 +53,22 @@ function computeCompensatorios(empName, monthKey, globalSchedule, config, baseMo
   return result
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
 export default function CompensatoriosPanel() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
+  const isMobile = useIsMobile()
 
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
   const config = useScheduleStore(s => s.config)
@@ -84,78 +96,118 @@ export default function CompensatoriosPanel() {
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-premium border border-borde/50 overflow-hidden backdrop-blur-xl">
-      <div className="flex items-center justify-between px-6 py-5 border-b border-borde/50 bg-gradient-to-r from-azul-50 to-white">
-        <h2 className="text-slate-800 font-bold text-lg capitalize font-display tracking-tight flex items-center gap-3">
-          <span className="w-2.5 h-6 bg-gradient-to-b from-sky-400 to-blue-600 rounded-full inline-block shadow-sm"></span>
-          {monthLabel}
-        </h2>
-        <div className="flex gap-1 bg-white border border-borde rounded-xl p-1 shadow-sm">
-          <button onClick={prevMonth} className="text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-4 py-1.5 rounded-lg transition-colors font-semibold text-sm">Anterior</button>
-          <div className="w-px bg-borde/60 mx-1"></div>
-          <button onClick={nextMonth} className="text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-4 py-1.5 rounded-lg transition-colors font-semibold text-sm">Siguiente</button>
+    <div className={`p-0 ${isMobile ? 'space-y-0' : 'space-y-8'}`}>
+      {/* ── Custom Header ────────────────────────── */}
+      <div className={`flex items-center justify-between gap-4 ${isMobile ? 'p-4 bg-nm-surface-low border-b border-nm-outline-variant' : ''}`}>
+        <div className="flex items-center gap-2">
+            <button
+               onClick={prevMonth}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+            >
+              ‹
+            </button>
+            <div className="flex-1 min-w-[140px] px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center">
+               <span className="text-sm font-black text-nm-on-surface tracking-tight capitalize">
+                 {monthLabel}
+               </span>
+            </div>
+            <button
+               onClick={nextMonth}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+            >
+              ›
+            </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto p-0">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-slate-50/80 border-b border-borde/50 text-slate-500 uppercase tracking-wider">
-              <th className="text-left text-xs font-extrabold px-6 py-4">Empleado</th>
-              <th className="text-center text-xs font-extrabold px-4 py-4" title="Saldo inicial">Inicial</th>
-              <th className="text-center text-xs font-extrabold px-4 py-4" title="Días causados en festivos">Causados</th>
-              <th className="text-center text-xs font-extrabold px-4 py-4" title="Compensatorios pagados (código C)">Pagados</th>
-              <th className="text-center text-xs font-extrabold px-6 py-4" title="Saldo final = Inicial + Causados - Pagados">Saldo Final</th>
-            </tr>
-          </thead>
-          <tbody>
-            {config.employees.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center text-slate-400 font-medium text-sm py-16 bg-slate-50/30">
-                  No hay empleados configurados.
-                </td>
-              </tr>
-            ) : (
-              rows.map(row => (
-                <tr key={row.empName} className="border-b border-borde/30 hover:bg-sky-50/40 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-sky-700 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
-                        {row.empName.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">{row.empName}</span>
-                    </div>
-                  </td>
-                  <td className="text-center px-4 py-4">
-                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-slate-100 text-slate-600 font-semibold text-xs border border-slate-200/60">
-                      {row.pendStart}
-                    </span>
-                  </td>
-                  <td className="text-center px-4 py-4">
-                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-emerald-50 text-emerald-600 font-bold text-xs border border-emerald-200/60 shadow-sm">
-                      +{row.causeCount}
-                    </span>
-                  </td>
-                  <td className="text-center px-4 py-4">
-                    <span className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-rose-50 text-rose-600 font-bold text-xs border border-rose-200/60 shadow-sm">
-                      -{row.paidCount}
-                    </span>
-                  </td>
-                  <td className="text-center px-6 py-4">
-                    <span className={`inline-flex items-center justify-center min-w-[3rem] px-4 py-1.5 rounded-full font-bold text-sm shadow-sm border ${
-                      row.closure < 0 
-                      ? 'bg-gradient-to-r from-red-50 to-rose-50 text-red-600 border-red-200' 
-                      : 'bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 border-sky-200'
-                    }`}>
+      {isMobile ? (
+        /* ── Mobile Card List ────────────────────────── */
+        <div className="p-4 space-y-4 pb-24">
+          {config.employees.length === 0 ? (
+            <div className="text-center py-20 text-nm-on-surface-variant font-bold uppercase tracking-widest bg-nm-surface-low rounded-3xl border border-nm-outline-variant/30">
+              No hay personal configurado.
+            </div>
+          ) : (
+            rows.map(row => (
+              <div key={row.empName} className="bg-nm-surface-high rounded-3xl border border-nm-outline-variant/30 p-5 shadow-sm active:scale-[0.98] transition-all">
+                <div className="flex items-center gap-4 mb-4">
+                   <div className="w-12 h-12 rounded-2xl bg-nm-primary/10 text-nm-primary font-black flex items-center justify-center text-lg border border-nm-primary/20">
+                     {row.empName.charAt(0)}
+                   </div>
+                   <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-nm-on-surface truncate tracking-tight">{row.empName}</h4>
+                      <p className="text-[10px] text-nm-on-surface-variant uppercase tracking-widest font-bold">Resumen de Saldo</p>
+                   </div>
+                   <div className={`text-xl font-black ${row.closure < 0 ? 'text-red-500' : 'text-nm-primary'}`}>
                       {row.closure}
-                    </span>
-                  </td>
+                   </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                   <div className="bg-nm-surface-low rounded-2xl p-3 border border-nm-outline-variant/10">
+                      <p className="text-[8px] text-nm-on-surface-variant uppercase font-black mb-1">Inicial</p>
+                      <p className="font-bold text-nm-on-surface">{row.pendStart}</p>
+                   </div>
+                   <div className="bg-emerald-500/5 rounded-2xl p-3 border border-emerald-500/10">
+                      <p className="text-[8px] text-emerald-600 uppercase font-black mb-1">Causados</p>
+                      <p className="font-black text-emerald-600">+{row.causeCount}</p>
+                   </div>
+                   <div className="bg-red-500/5 rounded-2xl p-3 border border-red-500/10">
+                      <p className="text-[8px] text-red-600 uppercase font-black mb-1">Pagados</p>
+                      <p className="font-black text-red-600">-{row.paidCount}</p>
+                   </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        /* ── Desktop Premium Table ────────────────────────── */
+        <div className="bg-white rounded-3xl shadow-premium border border-borde/50 overflow-hidden backdrop-blur-xl">
+          <div className="bg-azul-50/30 border-b border-borde/50 px-6 py-4">
+            <h3 className="text-azul font-black text-sm uppercase tracking-widest">Panel de Seguimiento</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-nm-surface-container/50 border-b border-nm-outline-variant/20">
+                  <th className="text-left text-[10px] font-black px-8 py-5 text-nm-on-surface-variant uppercase tracking-widest">Empleado</th>
+                  <th className="text-center text-[10px] font-black px-6 py-5 text-nm-on-surface-variant uppercase tracking-widest">Inicial</th>
+                  <th className="text-center text-[10px] font-black px-6 py-5 text-nm-on-surface-variant uppercase tracking-widest">Causados</th>
+                  <th className="text-center text-[10px] font-black px-6 py-5 text-nm-on-surface-variant uppercase tracking-widest">Pagados</th>
+                  <th className="text-center text-[10px] font-black px-8 py-5 text-nm-on-surface-variant uppercase tracking-widest">Saldo Final</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-nm-outline-variant/10">
+                {config.employees.length === 0 ? (
+                  <tr><td colSpan={5} className="py-20 text-center font-bold text-nm-on-surface-variant uppercase tracking-widest">N/A</td></tr>
+                ) : (
+                  rows.map(row => (
+                    <tr key={row.empName} className="hover:bg-nm-surface-high transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-nm-primary/10 text-nm-primary flex items-center justify-center font-black shadow-sm group-hover:scale-110 transition-transform">{row.empName.charAt(0)}</div>
+                          <span className="font-black text-nm-on-surface">{row.empName}</span>
+                        </div>
+                      </td>
+                      <td className="text-center px-6 py-5 font-bold text-nm-on-surface-variant">{row.pendStart}</td>
+                      <td className="text-center px-6 py-5 font-black text-emerald-600 bg-emerald-500/5">+{row.causeCount}</td>
+                      <td className="text-center px-6 py-5 font-black text-red-600 bg-red-500/5">-{row.paidCount}</td>
+                      <td className="text-center px-8 py-5">
+                         <span className={`inline-flex items-center justify-center min-w-[3rem] px-4 py-2 rounded-xl font-black text-sm shadow-sm ${
+                           row.closure < 0 ? 'bg-red-500 text-white shadow-red-200' : 'bg-nm-primary text-white shadow-sky-200'
+                         }`}>
+                           {row.closure}
+                         </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

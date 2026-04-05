@@ -3,7 +3,9 @@ import { supabase } from '../../lib/supabase'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { useScheduleSync } from '../../hooks/useScheduleSync'
 import Navbar from './Navbar'
+import MobileBottomNav from './MobileBottomNav'
 import ScheduleTable from '../schedule/ScheduleTable'
+import MobileScheduleView from '../schedule/MobileScheduleView'
 import CoverageChart from '../schedule/CoverageChart'
 import DailyCoverageGantt from '../schedule/DailyCoverageGantt'
 import MonthlySummary from '../summary/MonthlySummary'
@@ -12,6 +14,17 @@ import ConfigModal from '../admin/ConfigModal'
 import DepartmentManager from '../admin/DepartmentManager'
 
 const TABS = ['Horarios', 'Cobertura Día', 'Cobertura Hora', 'Resumen Mensual', 'Compensatorios']
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 
 export default function AppShell({ session }) {
   const [activeTab, setActiveTab] = useState('Horarios')
@@ -28,6 +41,8 @@ export default function AppShell({ session }) {
   const isSaving = useScheduleStore(s => s.isSaving)
   const saveError = useScheduleStore(s => s.saveError)
   const clearSaveError = useScheduleStore(s => s.clearSaveError)
+
+  const isMobile = useIsMobile()
 
   // Set up realtime sync
   useScheduleSync()
@@ -82,7 +97,7 @@ export default function AppShell({ session }) {
   const handleLogout = () => supabase.auth.signOut()
 
   return (
-    <div className="min-h-screen bg-azul-50 flex flex-col">
+    <div className={`app-shell ${isMobile ? 'app-shell--mobile' : ''}`}>
       <Navbar
         session={session}
         departments={departments}
@@ -102,13 +117,24 @@ export default function AppShell({ session }) {
         onOpenDepts={() => setShowDepts(true)}
       />
 
-      <main className="flex-1 p-4">
-        {activeTab === 'Horarios' && <ScheduleTable />}
+      <main className="app-shell__main">
+        {activeTab === 'Horarios' && (
+          isMobile ? <MobileScheduleView /> : <ScheduleTable />
+        )}
         {activeTab === 'Cobertura Día' && <DailyCoverageGantt />}
         {activeTab === 'Cobertura Hora' && <CoverageChart />}
         {activeTab === 'Resumen Mensual' && <MonthlySummary />}
         {activeTab === 'Compensatorios' && <CompensatoriosPanel />}
       </main>
+
+      {/* Mobile bottom navigation */}
+      {isMobile && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          tabs={TABS}
+          onTabChange={setActiveTab}
+        />
+      )}
 
       {showConfig && <ConfigModal onClose={() => setShowConfig(false)} />}
       {showDepts && <DepartmentManager onClose={() => setShowDepts(false)} />}

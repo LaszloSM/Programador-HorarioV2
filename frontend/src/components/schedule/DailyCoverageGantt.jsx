@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { SHIFT_CODE_INFO, absenceCodes, computeEndTimeWithMargin } from '../../lib/shiftCodes'
 
@@ -18,18 +18,24 @@ for (let h = START_HOUR; h <= END_HOUR; h++) {
   slots.push(`${String(h).padStart(2, '0')}:30`)
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
 export default function DailyCoverageGantt() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10))
   const config = useScheduleStore(s => s.config)
-  const [filterGroup, setFilterGroup] = useState(config.groups?.[0] || '')
+  const isMobile = useIsMobile()
+  const [filterGroup, setFilterGroup] = useState(config.groups?.[0] || 'Todos')
 
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
-
-  const taskGroupMap = useMemo(() => {
-    const map = {}
-    config.tasks.forEach(t => { map[t.name] = t.group })
-    return map
-  }, [config.tasks])
 
   // Process data for the selected day
   const data = useMemo(() => {
@@ -60,7 +66,6 @@ export default function DailyCoverageGantt() {
 
       // Calculate grid placement
       const gridStartSlot = Math.max(0, Math.floor((startMin - START_HOUR * 60) / 30))
-      // Handle shifts that cross midnight or end late
       const effectiveEndMin = endMin < startMin ? endMin + 24 * 60 : endMin
       const gridEndSlot = Math.min(TOTAL_SLOTS, Math.ceil((effectiveEndMin - START_HOUR * 60) / 30))
       const span = gridEndSlot - gridStartSlot
@@ -111,130 +116,153 @@ export default function DailyCoverageGantt() {
     setSelectedDate(d.toISOString().slice(0, 10))
   }
 
+  const todayStr = new Date().toISOString().slice(0, 10)
+
   return (
-    <div className="space-y-4">
-      {/* Controls Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center bg-azul rounded-full overflow-hidden shadow">
-          <div className="px-4 py-1.5 text-white text-sm font-semibold flex items-center gap-2">
-            <span className="material-icons text-sm">🗓</span>
-            Cobertura día
-          </div>
-          <button onClick={prevDay} className="px-2 py-1.5 text-white hover:bg-blue-800 transition-colors">‹</button>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="px-2 py-1.5 bg-white text-azul text-sm font-bold focus:outline-none"
-          />
-          <button onClick={nextDay} className="px-2 py-1.5 text-white hover:bg-blue-800 transition-colors">›</button>
+    <div className={`p-0 ${isMobile ? 'space-y-0' : 'space-y-6'}`}>
+      {/* ── Mobile/Desktop Header ────────────────────────── */}
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isMobile ? 'p-4 bg-nm-surface-low border-b border-nm-outline-variant' : ''}`}>
+        <div className="flex flex-col gap-1.5 md:flex-row md:items-center">
+           <div className="flex items-center gap-2">
+            <button
+               onClick={prevDay}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               aria-label="Día anterior"
+            >
+              ‹
+            </button>
+            <div className="flex-1 px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center relative">
+               <span className="text-sm font-bold text-nm-on-surface capitalize truncate">
+                 {isMobile ? selectedDate : dateLabel}
+               </span>
+               <input
+                type="date"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              />
+            </div>
+            <button
+               onClick={nextDay}
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               aria-label="Siguiente día"
+            >
+              ›
+            </button>
+           </div>
+           {selectedDate !== todayStr && (
+             <button
+               onClick={() => setSelectedDate(todayStr)}
+               className="text-xs font-bold text-nm-primary px-3 py-1.5 rounded-lg bg-nm-primary/10 self-center"
+             >
+               Ir a Hoy
+             </button>
+           )}
         </div>
 
-        <div className="flex items-center bg-azul rounded-full overflow-hidden shadow">
-          <div className="px-4 py-1.5 text-white text-sm font-semibold flex items-center gap-2">
-            <span className="material-icons text-sm">👥</span>
-            Grupo
+        <div className="flex items-center gap-2">
+          <div className="flex-1 md:flex-none flex items-center gap-2 px-3 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-nm-on-surface-variant">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <select
+              value={filterGroup}
+              onChange={e => setFilterGroup(e.target.value)}
+              className="bg-transparent text-nm-on-surface text-sm font-bold focus:outline-none flex-1 md:min-w-[140px]"
+            >
+              <option value="Todos">Todos los grupos</option>
+              {(config.groups || []).map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
           </div>
-          <select
-            value={filterGroup}
-            onChange={e => setFilterGroup(e.target.value)}
-            className="px-3 py-1.5 bg-white text-azul text-sm font-bold focus:outline-none min-w-[120px]"
-          >
-            <option value="Todos">Todos</option>
-            {(config.groups || []).map(g => (
-              <option key={g} value={g}>{g}</option>
-            ))}
-          </select>
         </div>
       </div>
 
-      {/* Gantt Chart Container */}
-      <div className="bg-white rounded-xl shadow border border-borde overflow-hidden">
-        <div className="bg-azul text-white text-center py-2 font-semibold text-sm capitalize">
-          Cobertura de horarios - {dateLabel}
-        </div>
+      {/* ── Gantt Chart ────────────────────────── */}
+      <div className={`bg-transparent md:bg-white md:rounded-3xl shadow-premium border-b md:border border-borde/50 overflow-hidden ${isMobile ? '' : 'backdrop-blur-xl'}`}>
+        {/* Desktop Title */}
+        {!isMobile && (
+          <div className="bg-azul-50/50 border-b border-borde/50 px-6 py-4">
+            <h3 className="text-azul font-bold text-sm uppercase tracking-wider">Plan de Cobertura</h3>
+          </div>
+        )}
 
-        <div className="overflow-x-auto p-4">
+        <div className={`overflow-x-auto scrollbar-hide ${isMobile ? 'pb-24' : 'p-4'}`}>
           <div
-            className="min-w-[900px] border border-borde relative text-[10px]"
+            className="min-w-[1000px] border border-nm-outline-variant/30 relative text-[10px]"
             style={{
               display: 'grid',
-              gridTemplateColumns: `200px repeat(${TOTAL_SLOTS}, minmax(20px, 1fr))`
+              gridTemplateColumns: `180px repeat(${TOTAL_SLOTS}, minmax(28px, 1fr))`,
+              backgroundColor: isMobile ? 'var(--nm-surface-low)' : 'white'
             }}
           >
-            {/* Header: Total empleados */}
-            <div className="bg-blue-100 border-b border-r border-borde flex items-center justify-center font-bold text-azul uppercase py-1">
-              Total empleados
+            {/* Row 1: TOTALS */}
+            <div className="sticky left-0 bg-nm-surface-container border-b border-r border-nm-outline-variant flex items-center px-4 py-2 font-black text-nm-primary uppercase z-30">
+              Personal Total
             </div>
             {data.counts.map((count, i) => (
-              <div key={i} className="bg-blue-100 border-b border-r border-borde flex items-center justify-center font-bold text-azul py-1">
+              <div key={i} className="bg-nm-surface-container border-b border-r border-nm-outline-variant/30 flex items-center justify-center font-black text-nm-primary text-xs py-2">
                 {count > 0 ? count : ''}
               </div>
             ))}
 
-            {/* Header: TIME SLOTS */}
-            <div className="bg-azul text-white border-b border-r border-borde flex items-center justify-center font-bold uppercase py-1">
-              Nombre
+            {/* Row 2: TIME SLOTS */}
+            <div className="sticky left-0 bg-nm-surface-high border-b border-r border-nm-outline-variant flex items-center px-4 py-1.5 font-bold text-nm-on-surface-variant uppercase z-30">
+              Empleado
             </div>
             {slots.map((slot, i) => (
-              <div key={i} className="bg-azul text-white border-b border-r border-borde flex items-center justify-center font-semibold py-1">
-                {slot}
+              <div key={i} className="bg-nm-surface-high border-b border-r border-nm-outline-variant/30 flex items-center justify-center font-bold text-nm-on-surface-variant py-1.5">
+                {slot.split(':')[1] === '00' ? slot : ''}
               </div>
             ))}
 
-            {/* Columns grid lines (background) */}
-            <div 
-               className="absolute top-[48px] bottom-0 left-[200px] right-0 pointer-events-none flex"
-               style={{ zIndex: 0 }}
-            >
-               {slots.map((_, i) => (
-                 <div key={i} className="flex-1 border-r border-borde/50" />
-               ))}
-            </div>
-
             {/* Content rows */}
             {data.list.length === 0 ? (
-              <div
-                className="col-span-full text-center py-8 text-sm text-muted font-medium bg-gray-50"
-              >
-                No hay turnos registrados para este grupo en la fecha seleccionada.
+              <div className="col-span-full text-center py-20 text-nm-on-surface-variant font-medium bg-nm-surface-low/50">
+                No hay turnos registrados para este grupo.
               </div>
             ) : (
               data.list.map((row, i) => (
                 <div key={i} className="contents relative z-10 group">
-                  {/* Name cell */}
-                  <div className="border-b border-border bg-white flex items-center px-2 py-1 z-10 group-hover:bg-blue-50/50">
-                    <div className="w-6 h-6 rounded-full bg-azul-50 text-azul font-bold flex items-center justify-center mr-2 shrink-0">
+                  {/* Name cell (Sticky Column) */}
+                  <div className="sticky left-0 border-b border-r border-nm-outline-variant/30 bg-nm-surface-low flex items-center px-4 py-2 z-20 group-hover:bg-nm-surface-high transition-colors">
+                    <div className="w-7 h-7 rounded-lg bg-nm-primary/10 text-nm-primary font-bold flex items-center justify-center mr-3 shrink-0 border border-nm-primary/20">
                       {row.empName.charAt(0)}
                     </div>
-                    <div className="truncate">
-                      <div className="font-bold text-azul truncate" title={row.empName}>{row.empName}</div>
-                      <div className="text-muted truncate mt-0.5" title={row.task}>{row.task}</div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-nm-on-surface truncate leading-tight" title={row.empName}>{row.empName}</div>
+                      <div className="text-[9px] text-nm-on-surface-variant uppercase tracking-widest mt-0.5" title={row.task}>{row.task}</div>
                     </div>
                   </div>
 
-                  {/* Empty cells space filler to allow borders */}
+                  {/* Grid filler space */}
                   {slots.map((_, j) => (
-                    <div key={j} className="border-b border-borde/10 group-hover:bg-blue-50/10"></div>
+                    <div key={j} className="border-b border-r border-nm-outline-variant/10 group-hover:bg-nm-surface-high/50 transition-colors">
+                       {/* Vertical hour marker lines */}
+                       {j % 2 === 0 && <div className="h-full border-l border-nm-outline-variant/5"></div>}
+                    </div>
                   ))}
 
-                  {/* Task Bar */}
+                  {/* Task Bar - ABSOLUTE PLACEMENT */}
                   {row.span > 0 && (
                     <div
-                      className="absolute rounded-md flex items-center justify-center my-1.5 shadow-sm overflow-hidden whitespace-nowrap text-white font-semibold transition-transform hover:scale-[1.01] hover:shadow-md cursor-default z-20"
+                      className="absolute rounded-lg flex items-center px-3 shadow-lg transform transition-all hover:scale-[1.01] hover:z-40 cursor-pointer z-30"
                       style={{
                         gridColumnStart: row.gridStart,
                         gridColumnEnd: `span ${row.span}`,
-                        gridRow: i + 3, // +3 because of the 2 header rows
+                        gridRow: i + 3,
                         backgroundColor: row.color,
-                        height: '24px',
-                        left: '2px', // small margins
-                        right: '2px'
+                        height: '28px',
+                        alignSelf: 'center',
+                        margin: '0 2px',
+                        boxShadow: `0 4px 12px ${row.color}33`,
+                        border: '1px solid rgba(255,255,255,0.2)'
                       }}
                       title={`${row.task} (${row.startTime} - ${row.endTime})`}
                     >
-                      <span className="text-black/60 px-2 drop-shadow-sm font-bold">
-                        {row.empGroup} {row.startTime} - {row.endTime} ({row.hours}h)
+                      <span className="text-white text-[9px] font-black uppercase drop-shadow-sm truncate">
+                        {row.startTime} — {row.endTime}
                       </span>
                     </div>
                   )}
