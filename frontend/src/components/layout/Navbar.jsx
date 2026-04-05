@@ -2,7 +2,7 @@ import { useScheduleStore } from '../../store/scheduleStore'
 
 export default function Navbar({
   session, departments, currentDeptId, onDeptChange, onLogout,
-  isDirty, isSaving, saveError, onClearError, isAdmin,
+  isDirty, isSaving, saveError, onClearError, isAdmin, isGerente,
   activeTab, tabs, onTabChange, onOpenConfig, onOpenDepts
 }) {
   const undoLastAction = useScheduleStore(s => s.undoLastAction)
@@ -20,7 +20,7 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Department selector — admin only */}
+          {/* Department selector — admin only (dropdown) */}
           {isAdmin && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
@@ -33,8 +33,14 @@ export default function Navbar({
               ))}
             </select>
           )}
-          {/* Show department name for non-admin */}
-          {!isAdmin && currentDeptId && departments.length > 0 && (
+          {/* Gerente: etiqueta estática sin dropdown */}
+          {isGerente && (
+            <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
+              Todos los departamentos
+            </span>
+          )}
+          {/* Show department name for regular users */}
+          {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
             <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
               {departments.find(d => d.id === currentDeptId)?.name ?? ''}
             </span>
@@ -65,15 +71,17 @@ export default function Navbar({
 
           <div className="h-5 w-px bg-white/20 mx-1 hidden sm:block"></div>
 
-          {/* Undo */}
-          <button
-            onClick={undoLastAction}
-            disabled={historyStack.length === 0}
-            title="Deshacer (Ctrl+Z)"
-            className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all disabled:opacity-30 disabled:hover:bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-1"
-          >
-            ↩ <span className="hidden sm:inline">Deshacer</span>
-          </button>
+          {/* Undo — oculto para gerente */}
+          {!isGerente && (
+            <button
+              onClick={undoLastAction}
+              disabled={historyStack.length === 0}
+              title="Deshacer (Ctrl+Z)"
+              className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all disabled:opacity-30 disabled:hover:bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-1"
+            >
+              ↩ <span className="hidden sm:inline">Deshacer</span>
+            </button>
+          )}
 
           {/* Configuración — admin only */}
           {isAdmin && (

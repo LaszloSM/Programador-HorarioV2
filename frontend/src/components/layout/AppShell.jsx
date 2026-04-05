@@ -18,6 +18,7 @@ export default function AppShell({ session }) {
   const [departments, setDepartments] = useState([])
   const [userDeptId, setUserDeptId] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isGerente, setIsGerente] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [showDepts, setShowDepts] = useState(false)
 
@@ -55,7 +56,9 @@ export default function AppShell({ session }) {
 
       const admin = profile?.role === 'admin' ||
         session.user.app_metadata?.role === 'admin'
+      const gerente = profile?.role === 'gerente'
       setIsAdmin(admin)
+      setIsGerente(gerente)
 
       // Load departments list
       const { data: depts } = await supabase
@@ -64,8 +67,8 @@ export default function AppShell({ session }) {
         .order('name')
       setDepartments(depts ?? [])
 
-      // Load user's department or 'Todos' if admin
-      const deptId = admin ? null : (profile?.department_id ?? depts?.[0]?.id)
+      // Load user's department, or 'Todos' if admin/gerente
+      const deptId = (admin || gerente) ? null : (profile?.department_id ?? depts?.[0]?.id)
       setUserDeptId(deptId)
       loadDepartment(deptId)
     }
@@ -91,6 +94,7 @@ export default function AppShell({ session }) {
         saveError={saveError}
         onClearError={clearSaveError}
         isAdmin={isAdmin}
+        isGerente={isGerente}
         activeTab={activeTab}
         tabs={TABS}
         onTabChange={setActiveTab}
