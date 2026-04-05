@@ -26,7 +26,7 @@ export default function MonthlySummary() {
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1) } else setMonth(m => m - 1) }
   const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1) }
 
-  const handleExport = () => exportToExcel(year, month, summary)
+  const handleExport = () => exportToExcel(year, month, summary, globalSchedule, config)
 
   // Day headers for table 1
   const dayHeaders = useMemo(() => {

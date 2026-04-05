@@ -64,6 +64,7 @@ export default function ShiftCell({ empName, dateKey, onClick, onContextMenu }) 
       <div
         ref={setDropRef}
         onClick={e => { e.stopPropagation(); onClick?.() }}
+        onContextMenu={e => { e.preventDefault(); onContextMenu?.(e.clientX, e.clientY, empName, dateKey) }}
         className={`h-16 border border-borde rounded-lg cursor-pointer hover:bg-azul-50 transition-colors flex items-center justify-center ${isOver ? 'bg-azul-100 border-azul' : 'bg-white'}`}
       >
         <span className="text-muted text-xs">+</span>

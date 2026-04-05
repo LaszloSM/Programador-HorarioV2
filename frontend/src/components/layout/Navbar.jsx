@@ -22,18 +22,24 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Department selector */}
-          {departments.length > 0 && (
+          {/* Department selector — admin only */}
+          {isAdmin && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
               onChange={e => onDeptChange(e.target.value === '' ? null : e.target.value)}
               className="bg-white/10 backdrop-blur-md text-white border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all cursor-pointer"
             >
-              {isAdmin && <option value="" className="text-slate-900">Todos los departamentos</option>}
+              <option value="" className="text-slate-900">Todos los departamentos</option>
               {departments.map(d => (
                 <option key={d.id} value={d.id} className="text-slate-900">{d.name}</option>
               ))}
             </select>
+          )}
+          {/* Show department name for non-admin */}
+          {!isAdmin && currentDeptId && departments.length > 0 && (
+            <span className="bg-white/10 text-white border border-white/20 text-xs rounded-lg px-3 py-1.5">
+              {departments.find(d => d.id === currentDeptId)?.name ?? ''}
+            </span>
           )}
 
           {/* Save status */}
@@ -71,14 +77,16 @@ export default function Navbar({
             ↩ <span className="hidden sm:inline">Deshacer</span>
           </button>
 
-          {/* Configuración */}
-          <button
-            onClick={onOpenConfig}
-            title="Configuración"
-            className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all px-3 py-1.5 rounded-lg flex items-center gap-1"
-          >
-            ⚙ <span className="hidden sm:inline">Config</span>
-          </button>
+          {/* Configuración — admin only */}
+          {isAdmin && (
+            <button
+              onClick={onOpenConfig}
+              title="Configuración"
+              className="text-xs bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-sm transition-all px-3 py-1.5 rounded-lg flex items-center gap-1"
+            >
+              ⚙ <span className="hidden sm:inline">Config</span>
+            </button>
+          )}
 
           {/* Departamentos (solo admin) */}
           {isAdmin && (

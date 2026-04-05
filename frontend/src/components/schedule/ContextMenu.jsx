@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export default function ContextMenu({ x, y, empName, dateKey, onCopy, onPaste, onDelete, onClose, canPaste }) {
+export default function ContextMenu({ x, y, empName, dateKey, onCopy, onPaste, onDelete, onClose, canPaste, canCopy }) {
   const menuRef = useRef(null)
 
   // Clamp to viewport
@@ -32,8 +32,9 @@ export default function ContextMenu({ x, y, empName, dateKey, onCopy, onPaste, o
       style={{ left, top, width: menuW }}
     >
       <button
-        className={btn}
-        onClick={() => { onCopy(); onClose() }}
+        className={canCopy ? btn : btnDisabled}
+        disabled={!canCopy}
+        onClick={() => { if (canCopy) { onCopy(); onClose() } }}
       >
         Copiar turno
       </button>
@@ -46,8 +47,9 @@ export default function ContextMenu({ x, y, empName, dateKey, onCopy, onPaste, o
       </button>
       <div className="border-t border-borde" />
       <button
-        className={`${btn} text-danger hover:bg-red-50`}
-        onClick={() => { onDelete(); onClose() }}
+        className={canCopy ? `${btn} text-danger hover:bg-red-50` : btnDisabled}
+        disabled={!canCopy}
+        onClick={() => { if (canCopy) { onDelete(); onClose() } }}
       >
         Eliminar turno
       </button>

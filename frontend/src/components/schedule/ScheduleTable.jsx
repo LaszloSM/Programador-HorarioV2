@@ -51,6 +51,7 @@ export default function ScheduleTable() {
   const [activeId, setActiveId] = useState(null)
   const [contextMenu, setContextMenu] = useState(null) // { x, y, empName, dateKey } | null
   const [filterGroup, setFilterGroup] = useState('Todos')
+  const [filterName, setFilterName] = useState('')
 
   const config = useScheduleStore(s => s.config)
   const moveShift = useScheduleStore(s => s.moveShift)
@@ -119,8 +120,12 @@ export default function ScheduleTable() {
         })
       })
     }
+    if (filterName.trim()) {
+      const q = filterName.trim().toLowerCase()
+      list = list.filter(emp => emp.name.toLowerCase().includes(q))
+    }
     return list
-  }, [config.employees, filterGroup, dates, globalSchedule, taskGroupMap])
+  }, [config.employees, filterGroup, filterName, dates, globalSchedule, taskGroupMap])
 
   return (
     <DndContext
@@ -152,6 +157,17 @@ export default function ScheduleTable() {
                 <option value="Todos">Todos</option>
                 {(config.groups || []).map(g => <option key={g} value={g}>{g}</option>)}
               </select>
+            </div>
+            {/* Filter by employee name */}
+            <div className="flex items-center gap-2 border-l border-borde/60 pl-5">
+              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider hidden sm:block">Empleado</span>
+              <input
+                type="text"
+                value={filterName}
+                onChange={e => setFilterName(e.target.value)}
+                placeholder="Buscar..."
+                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 shadow-sm w-32"
+              />
             </div>
           </div>
           <button onClick={goToday} className="text-xs font-bold text-sky-700 bg-sky-50 border border-sky-100 px-4 py-2 rounded-xl hover:bg-sky-100 transition-colors shadow-sm">
@@ -261,6 +277,7 @@ export default function ScheduleTable() {
           empName={contextMenu.empName}
           dateKey={contextMenu.dateKey}
           canPaste={!!clipboardEntry}
+          canCopy={!!globalSchedule[contextMenu.empName]?.[contextMenu.dateKey]}
           onCopy={() => copyShift(contextMenu.empName, contextMenu.dateKey)}
           onPaste={() => pasteShift(contextMenu.empName, contextMenu.dateKey)}
           onDelete={() => deleteShift(contextMenu.empName, contextMenu.dateKey)}
