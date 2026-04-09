@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { SHIFT_CODE_INFO, coverageTimes, absenceCodes, computeEndTimeWithMargin } from '../../lib/shiftCodes'
 
@@ -37,8 +37,6 @@ export default function CoverageChart() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10))
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
   const config = useScheduleStore(s => s.config)
-  const scrollRef = useRef(null)
-
   const todayStr = new Date().toISOString().slice(0, 10)
   const isToday = selectedDate === todayStr
   const currentSlot = isToday ? getCurrentTimeSlot() : null
@@ -209,41 +207,35 @@ export default function CoverageChart() {
                 </span>
               </div>
 
-              {/* Scrollable employee chips */}
-              <div
-                className="flex-1 min-w-0 overflow-x-auto py-1"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                <div className="flex gap-1 items-center" style={{ width: 'max-content' }}>
-                  {count === 0 ? (
-                    <div className="h-px w-10 bg-borde/30 rounded-full mx-1" />
-                  ) : (
-                    workers.map((w, i) => {
-                      const bgColor = w.group
-                        ? (config.groupColors[w.group] ?? '#94A3B8')
-                        : '#94A3B8'
-                      const fgColor = textColorFor(bgColor)
-                      return (
-                        <span
-                          key={i}
-                          title={`${w.name}${w.task ? ' — ' + w.task : ''}`}
-                          className="inline-flex items-center rounded-md text-[10px] font-bold cursor-default select-none whitespace-nowrap shrink-0"
-                          style={{
-                            backgroundColor: bgColor,
-                            color: fgColor,
-                            padding: '2px 7px',
-                            minWidth: '72px',
-                            maxWidth: '100px',
-                          }}
-                        >
-                          <span className="truncate w-full text-center">
-                            {abbrevName(w.name)}
-                          </span>
+              {/* Employee chips — wrap naturally, all names visible */}
+              <div className="flex-1 min-w-0 py-1 flex flex-wrap gap-1 items-center">
+                {count === 0 ? (
+                  <div className="h-px w-10 bg-borde/30 rounded-full mx-1" />
+                ) : (
+                  workers.map((w, i) => {
+                    const bgColor = w.group
+                      ? (config.groupColors[w.group] ?? '#94A3B8')
+                      : '#94A3B8'
+                    const fgColor = textColorFor(bgColor)
+                    return (
+                      <span
+                        key={i}
+                        title={`${w.name}${w.task ? ' — ' + w.task : ''}`}
+                        className="inline-flex items-center rounded-md text-[10px] font-bold cursor-default select-none"
+                        style={{
+                          backgroundColor: bgColor,
+                          color: fgColor,
+                          padding: '2px 8px',
+                          minWidth: '76px',
+                        }}
+                      >
+                        <span className="truncate w-full text-center">
+                          {abbrevName(w.name)}
                         </span>
-                      )
-                    })
-                  )}
-                </div>
+                      </span>
+                    )
+                  })
+                )}
               </div>
 
               {/* Count badge */}
@@ -262,15 +254,13 @@ export default function CoverageChart() {
         })}
       </div>
 
-      {/* ── Footer hint ───────────────────────────────────────── */}
-      <div className="px-5 py-2 border-t border-borde/20 bg-slate-50/60 shrink-0">
-        <p className="text-[10px] text-metro-muted text-center">
-          Desliza → dentro de la fila para ver todos los empleados
-          {isToday && currentSlot && (
-            <span className="ml-2 font-semibold text-amber-600">· Franja actual resaltada</span>
-          )}
-        </p>
-      </div>
+      {isToday && currentSlot && (
+        <div className="px-5 py-2 border-t border-borde/20 bg-amber-50/60 shrink-0">
+          <p className="text-[10px] text-amber-700 font-semibold text-center">
+            Franja actual resaltada en ámbar
+          </p>
+        </div>
+      )}
     </div>
   )
 }

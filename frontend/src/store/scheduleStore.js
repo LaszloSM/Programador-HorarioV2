@@ -313,8 +313,6 @@ export const useScheduleStore = create((set, get) => {
       const { currentDeptId } = get()
       set({ config: newConfig })
 
-      if (!currentDeptId) return
-
       // Build the plannerConfigV1 object in the same shape as app.html
       const configToSave = {
         employees: newConfig.employees.map(e => ({
@@ -331,12 +329,20 @@ export const useScheduleStore = create((set, get) => {
         initialPending: newConfig.initialPending || {},
         employeeMaxHours: {},
       }
-      // Build employeeMaxHours
       newConfig.employees.forEach(e => {
         configToSave.employeeMaxHours[e.name] = e.maxHours
       })
 
-      await _kvSet(CONFIG_KEY, configToSave, currentDeptId)
+      if (currentDeptId) {
+        // Normal case: save to the current department
+        await _kvSet(CONFIG_KEY, configToSave, currentDeptId)
+      } else {
+        // Admin "all departments" view: save to every department so changes persist
+        const { data: depts } = await supabase.from('departments').select('id')
+        if (depts && depts.length > 0) {
+          await Promise.all(depts.map(d => _kvSet(CONFIG_KEY, configToSave, d.id)))
+        }
+      }
     },
 
     // ─── Internal: flush debounced saves to app_state ──────

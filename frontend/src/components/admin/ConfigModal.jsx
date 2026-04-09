@@ -31,6 +31,7 @@ export default function ConfigModal({ onClose }) {
   )
   const [initialPending, setInitialPending] = useState({ ...config.initialPending })
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [activeSection, setActiveSection] = useState('employees')
 
   const addEmployee = () => setEmployees(prev => [...prev, { name: '', maxHours: 44, jefatura: false }])
@@ -60,39 +61,45 @@ export default function ConfigModal({ onClose }) {
 
   const handleSave = async () => {
     setSaving(true)
-    const filteredEmployees = employees.filter(e => e.name.trim())
-    const employeeMaxHours = {}
-    filteredEmployees.forEach(e => { employeeMaxHours[e.name] = e.maxHours })
+    setSaveError(null)
+    try {
+      const filteredEmployees = employees.filter(e => e.name.trim())
+      const employeeMaxHours = {}
+      filteredEmployees.forEach(e => { employeeMaxHours[e.name] = e.maxHours })
 
-    const finalGroups = []
-    const finalColors = {}
-    const renameMap = {}
+      const finalGroups = []
+      const finalColors = {}
+      const renameMap = {}
 
-    groups.forEach(g => {
-      const finalName = g.name.trim() || 'Nuevo Grupo'
-      finalGroups.push(finalName)
-      finalColors[finalName] = g.color
-      if (g.originalName && g.originalName !== finalName) {
-        renameMap[g.originalName] = finalName
-      }
-    })
+      groups.forEach(g => {
+        const finalName = g.name.trim() || 'Nuevo Grupo'
+        finalGroups.push(finalName)
+        finalColors[finalName] = g.color
+        if (g.originalName && g.originalName !== finalName) {
+          renameMap[g.originalName] = finalName
+        }
+      })
 
-    const finalTasks = tasks.filter(t => t.name.trim()).map(t => ({
-      ...t,
-      group: renameMap[t.group] || t.group
-    }))
+      const finalTasks = tasks.filter(t => t.name.trim()).map(t => ({
+        ...t,
+        group: renameMap[t.group] || t.group
+      }))
 
-    await applyConfig({
-      ...config,
-      employees: filteredEmployees,
-      tasks: finalTasks,
-      groups: finalGroups,
-      groupColors: finalColors,
-      initialPending,
-      employeeMaxHours,
-    })
-    setSaving(false)
-    onClose()
+      await applyConfig({
+        ...config,
+        employees: filteredEmployees,
+        tasks: finalTasks,
+        groups: finalGroups,
+        groupColors: finalColors,
+        initialPending,
+        employeeMaxHours,
+      })
+      setSaving(false)
+      onClose()
+    } catch (err) {
+      setSaving(false)
+      setSaveError(err?.message ?? 'Error al guardar. Revisa la conexión.')
+    }
   }
 
   const SECTIONS = [
@@ -287,17 +294,27 @@ export default function ConfigModal({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className={`flex gap-3 px-6 py-5 border-t border-borde/60 bg-white ${isMobile ? 'pb-10' : ''}`}>
-          <button onClick={onClose} className="flex-1 bg-white text-muted font-black rounded-xl py-3 text-xs uppercase tracking-widest border border-borde hover:bg-azul-50 transition-colors">
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex-[2] bg-azul text-white rounded-xl py-3 text-sm font-black uppercase tracking-widest shadow-md hover:bg-azul/90 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            {saving ? 'Guardando...' : 'Aplicar Cambios'}
-          </button>
+        <div className={`flex flex-col gap-2 px-6 py-5 border-t border-borde/60 bg-white ${isMobile ? 'pb-10' : ''}`}>
+          {saveError && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-xs font-semibold">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {saveError}
+            </div>
+          )}
+          <div className="flex gap-3">
+            <button onClick={onClose} className="flex-1 bg-white text-muted font-black rounded-xl py-3 text-xs uppercase tracking-widest border border-borde hover:bg-azul-50 transition-colors">
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-[2] bg-azul text-white rounded-xl py-3 text-sm font-black uppercase tracking-widest shadow-md hover:bg-azul/90 active:scale-[0.98] transition-all disabled:opacity-50"
+            >
+              {saving ? 'Guardando...' : 'Aplicar Cambios'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
