@@ -34,8 +34,10 @@ export function useScheduleSync() {
 
         if (key === SCHEDULE_KEY) {
           if (!val || (typeof val === 'object' && Object.keys(val).length === 0)) return
-          const currentSchedule = useScheduleStore.getState().globalSchedule
-          if (JSON.stringify(val) === JSON.stringify(currentSchedule)) return
+          const state = useScheduleStore.getState()
+          // Never overwrite unsaved local edits with server data
+          if (state.isDirty) return
+          if (JSON.stringify(val) === JSON.stringify(state.globalSchedule)) return
           useScheduleStore.setState({
             globalSchedule: val,
             isDirty: false,

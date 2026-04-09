@@ -135,161 +135,282 @@ export function computeMonthlySummaryData(year, month, globalSchedule, config, b
   return result
 }
 
+// ─── Date helper ──────────────────────────────────────────────────────────────
+const MONTH_ABBR = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+
+function formatDateEs(year, month, day) {
+  return `${String(day).padStart(2, '0')}-${MONTH_ABBR[month - 1]}-${year}`
+}
+
+// ─── Style helpers for ExcelJS ───────────────────────────────────────────────
+const AZUL       = 'FF0E3B75'
+const AZUL_50    = 'FFE8F0FB'
+const BORDE      = 'FFC5D6E3'
+const WHITE      = 'FFFFFFFF'
+const GRAY_ROW   = 'FFF5F8FC'
+
+const THIN_BORDER = {
+  top:    { style: 'thin', color: { argb: BORDE } },
+  left:   { style: 'thin', color: { argb: BORDE } },
+  bottom: { style: 'thin', color: { argb: BORDE } },
+  right:  { style: 'thin', color: { argb: BORDE } },
+}
+
+function applyHeaderStyle(cell) {
+  cell.font      = { bold: true, color: { argb: WHITE }, size: 11, name: 'Calibri' }
+  cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL } }
+  cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: false }
+  cell.border    = {
+    top:    { style: 'medium', color: { argb: AZUL } },
+    left:   { style: 'thin',   color: { argb: AZUL } },
+    bottom: { style: 'medium', color: { argb: AZUL } },
+    right:  { style: 'thin',   color: { argb: AZUL } },
+  }
+}
+
+function applyTitleStyle(cell) {
+  cell.font      = { bold: true, size: 13, color: { argb: AZUL }, name: 'Calibri' }
+  cell.alignment = { horizontal: 'center', vertical: 'middle' }
+}
+
+function applyDataStyle(cell, rowIndex) {
+  const even = rowIndex % 2 === 0
+  cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: even ? GRAY_ROW : WHITE } }
+  cell.border = THIN_BORDER
+  cell.font   = { name: 'Calibri', size: 10 }
+  cell.alignment = { vertical: 'middle' }
+}
+
+function applyTotalStyle(cell) {
+  cell.font   = { bold: true, name: 'Calibri', size: 10, color: { argb: AZUL } }
+  cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL_50 } }
+  cell.border = {
+    top:    { style: 'medium', color: { argb: AZUL } },
+    left:   { style: 'thin',   color: { argb: BORDE } },
+    bottom: { style: 'medium', color: { argb: AZUL } },
+    right:  { style: 'thin',   color: { argb: BORDE } },
+  }
+}
+
 /**
- * Exports monthly summary to Excel (.xlsx) using SheetJS (xlsx) — browser-compatible.
+ * Exports monthly summary to Excel (.xlsx) using ExcelJS — browser-compatible.
  * Sheet 1: "Malla_Mensual"   — monthly schedule grid
  * Sheet 2: "Compensatorios"  — compensation table
  * Sheet 3: "Programacion"    — per-day detail with autofilter
  */
 export function exportToExcel(year, month, summaryData, globalSchedule, config) {
-  import('xlsx').then(mod => {
-    const XLSX = mod.default || mod
-
-    const { rows, dayCounts, totalPend, totalClosure, daysInMonth } = summaryData
-    const yearStr  = String(year).padStart(4, '0')
-    const monthStr = String(month).padStart(2, '0')
-    const monthLabel = new Date(year, month - 1, 1)
-      .toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
-      .toUpperCase()
-
-    const wb = XLSX.utils.book_new()
-
-
-    // ===================================================
-    // SHEET 1 — Malla Mensual
-    // ===================================================
-    {
-      const aoa = []
-
-      // Title row
-      const titleRow = [`MALLA MENSUAL — ${monthLabel}`]
-      aoa.push(titleRow)
-
-      // Header row: Nombre | Poliv. | Pend. | 01…31 | Saldo
-      const hdr = ['Nombre', 'Poliv.', 'Pend.']
-      for (let d = 1; d <= daysInMonth; d++) {
-        const wd = new Date(year, month - 1, d)
-          .toLocaleDateString('es-CO', { weekday: 'short' }).slice(0, 2).toUpperCase()
-        hdr.push(`${wd}\n${String(d).padStart(2, '0')}`)
-      }
-      hdr.push('Saldo')
-      aoa.push(hdr)
-
-      // Employee rows
-      rows.forEach(row => {
-        const r = [row.emp, `${row.poliv}%`, row.pend]
-        row.codes.forEach(code => r.push(code === '0' ? '' : code))
-        r.push(row.closure)
-        aoa.push(r)
+  import('exceljs').then(mod => {
+    const ExcelJS = mod.default || mod
+    _buildAndDownload(ExcelJS, year, month, summaryData, globalSchedule, config)
+      .catch(err => {
+        console.error('Error exportando Excel:', err)
+        alert('Error al exportar. Revisa la consola.')
       })
-
-      // Total row
-      const tot = ['TOTAL', '', totalPend]
-      dayCounts.forEach(c => tot.push(c || ''))
-      tot.push(totalClosure)
-      aoa.push(tot)
-
-      const ws = XLSX.utils.aoa_to_sheet(aoa)
-
-      // Column widths
-      const colW = [{ wch: 24 }, { wch: 7 }, { wch: 6 }]
-      for (let i = 0; i < daysInMonth; i++) colW.push({ wch: 4 })
-      colW.push({ wch: 7 })
-      ws['!cols'] = colW
-
-      // Merge title across all columns
-      ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 + daysInMonth } }]
-
-      // AutoFilter on header row
-      ws['!autofilter'] = { ref: `A2:${XLSX.utils.encode_col(3 + daysInMonth)}2` }
-
-      XLSX.utils.book_append_sheet(wb, ws, 'Malla_Mensual')
-    }
-
-    // ===================================================
-    // SHEET 2 — Compensatorios
-    // ===================================================
-    {
-      const aoa = []
-      aoa.push([`COMPENSATORIOS ${monthLabel}`])
-      aoa.push(['NOMBRE', 'SALDO', '# CAUSADOS', 'FECHAS CAUSADAS', '# PAGADOS', 'FECHAS PAGADAS', '# PENDIENTE'])
-
-      rows.forEach(row => {
-        aoa.push([
-          row.emp,
-          row.pend,
-          row.caused > 0 ? row.caused : 0,
-          row.causedStr || '',
-          row.paid > 0 ? row.paid : 0,
-          row.paidStr || '',
-          row.closure,
-        ])
-      })
-
-      aoa.push(['TOTAL COMPENSATORIOS', '', '', '', '', '', totalClosure])
-
-      const ws = XLSX.utils.aoa_to_sheet(aoa)
-      ws['!cols'] = [{ wch: 24 }, { wch: 8 }, { wch: 12 }, { wch: 30 }, { wch: 12 }, { wch: 30 }, { wch: 10 }]
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-        { s: { r: rows.length + 2, c: 0 }, e: { r: rows.length + 2, c: 5 } },
-      ]
-      XLSX.utils.book_append_sheet(wb, ws, 'Compensatorios')
-    }
-
-    // ===================================================
-    // SHEET 3 — Programacion (detail per day)
-    // ===================================================
-    {
-      const aoa = []
-      aoa.push(['PROGRAMACION DE HORARIOS'])
-      aoa.push(['Fecha', 'Empleado', 'Cod Tur', 'H. Entrada', 'H. Salida', 'Duración', 'Tarea'])
-
-      if (globalSchedule && config) {
-        for (let d = 1; d <= daysInMonth; d++) {
-          const ds = `${yearStr}-${monthStr}-${String(d).padStart(2, '0')}`
-          const fechaStr = new Date(year, month - 1, d)
-            .toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-
-          config.employees.forEach(emp => {
-            const entry = globalSchedule[emp.name]?.[ds]
-            if (!entry || (!entry.duration && !entry.startTime && !entry.code)) return
-
-            const isAbs = entry.duration && absenceCodes.includes(entry.duration)
-            if (isAbs) {
-              const label    = absenceLabels[entry.duration] ?? entry.duration
-              const durHours = { 36: 6, 42: 7, 44: 8 }[emp.maxHours] ?? 8
-              aoa.push([fechaStr, emp.name, entry.duration, '', '', `${label} ${durHours}H`, 'Ausente'])
-            } else {
-              const codeInfo  = entry.code ? SHIFT_CODE_INFO[entry.code] : null
-              const hours     = codeInfo ? codeInfo.hours : (parseInt(entry.duration) || 0)
-              const startTime = entry.startTime || (codeInfo ? codeInfo.start : '')
-              const endTime   = startTime && hours > 0
-                ? computeEndTimeWithMargin(startTime, hours, emp.jefatura ?? false)
-                : ''
-              aoa.push([
-                fechaStr, emp.name,
-                entry.code || entry.duration || '',
-                startTime, endTime,
-                hours > 0 ? `${hours}h` : '',
-                entry.task || '',
-              ])
-            }
-          })
-        }
-      }
-
-      const ws = XLSX.utils.aoa_to_sheet(aoa)
-      ws['!cols'] = [{ wch: 15 }, { wch: 26 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 20 }]
-      ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }]
-      ws['!autofilter'] = { ref: 'A2:G2' }
-      XLSX.utils.book_append_sheet(wb, ws, 'Programacion')
-    }
-
-    // Download
-    XLSX.writeFile(wb, `Resumen_${yearStr}-${monthStr}.xlsx`)
   }).catch(err => {
-    console.error('Error exportando Excel:', err)
+    console.error('Error cargando ExcelJS:', err)
     alert('Error al exportar. Revisa la consola.')
   })
+}
+
+async function _buildAndDownload(ExcelJS, year, month, summaryData, globalSchedule, config) {
+  const { rows, dayCounts, totalPend, totalClosure, daysInMonth } = summaryData
+  const yearStr  = String(year).padStart(4, '0')
+  const monthStr = String(month).padStart(2, '0')
+  const monthLabel = new Date(year, month - 1, 1)
+    .toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+    .toUpperCase()
+
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'Programador Horarios'
+  wb.created = new Date()
+
+  // ===================================================
+  // SHEET 1 — Malla Mensual
+  // ===================================================
+  {
+    const ws = wb.addWorksheet('Malla_Mensual')
+
+    const totalCols = 3 + daysInMonth + 1 // Nombre + Poliv + Pend + days + Saldo
+
+    // Row 1 — Title
+    ws.addRow([`MALLA MENSUAL — ${monthLabel}`])
+    ws.mergeCells(1, 1, 1, totalCols)
+    applyTitleStyle(ws.getCell(1, 1))
+    ws.getRow(1).height = 22
+
+    // Row 2 — Headers
+    const dayHeaders = []
+    for (let d = 1; d <= daysInMonth; d++) {
+      const wd = new Date(year, month - 1, d)
+        .toLocaleDateString('es-CO', { weekday: 'short' }).slice(0, 2).toUpperCase()
+      dayHeaders.push(`${wd}\n${String(d).padStart(2, '0')}`)
+    }
+    const hdrRow = ws.addRow(['Nombre', 'Poliv.', 'Pend.', ...dayHeaders, 'Saldo'])
+    hdrRow.height = 30
+    hdrRow.eachCell({ includeEmpty: true }, cell => applyHeaderStyle(cell))
+
+    // Column widths
+    ws.getColumn(1).width = 24
+    ws.getColumn(2).width = 7
+    ws.getColumn(3).width = 6
+    for (let i = 0; i < daysInMonth; i++) ws.getColumn(4 + i).width = 4.5
+    ws.getColumn(4 + daysInMonth).width = 7
+
+    // Autofilter
+    ws.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: totalCols } }
+
+    // Employee rows
+    rows.forEach((row, idx) => {
+      const data = [row.emp, `${row.poliv}%`, row.pend]
+      row.codes.forEach(code => data.push(code === '0' ? '' : code))
+      data.push(row.closure)
+      const wsRow = ws.addRow(data)
+      wsRow.eachCell({ includeEmpty: true }, cell => applyDataStyle(cell, idx))
+    })
+
+    // Total row
+    const totData = ['TOTAL', '', totalPend]
+    dayCounts.forEach(c => totData.push(c || ''))
+    totData.push(totalClosure)
+    const totRow = ws.addRow(totData)
+    totRow.eachCell({ includeEmpty: true }, cell => applyTotalStyle(cell))
+
+    // Freeze header rows
+    ws.views = [{ state: 'frozen', xSplit: 0, ySplit: 2 }]
+  }
+
+  // ===================================================
+  // SHEET 2 — Compensatorios
+  // ===================================================
+  {
+    const ws = wb.addWorksheet('Compensatorios')
+    const totalCols = 7
+
+    // Title
+    ws.addRow([`COMPENSATORIOS ${monthLabel}`])
+    ws.mergeCells(1, 1, 1, totalCols)
+    applyTitleStyle(ws.getCell(1, 1))
+    ws.getRow(1).height = 22
+
+    // Headers
+    const hdrRow = ws.addRow(['NOMBRE', 'SALDO', '# CAUSADOS', 'FECHAS CAUSADAS', '# PAGADOS', 'FECHAS PAGADAS', '# PENDIENTE'])
+    hdrRow.height = 22
+    hdrRow.eachCell({ includeEmpty: true }, cell => applyHeaderStyle(cell))
+
+    // Column widths
+    ws.getColumn(1).width = 24
+    ws.getColumn(2).width = 8
+    ws.getColumn(3).width = 12
+    ws.getColumn(4).width = 30
+    ws.getColumn(5).width = 12
+    ws.getColumn(6).width = 30
+    ws.getColumn(7).width = 12
+
+    // Data rows
+    rows.forEach((row, idx) => {
+      const wsRow = ws.addRow([
+        row.emp,
+        row.pend,
+        row.caused > 0 ? row.caused : 0,
+        row.causedStr || '',
+        row.paid > 0 ? row.paid : 0,
+        row.paidStr || '',
+        row.closure,
+      ])
+      wsRow.eachCell({ includeEmpty: true }, cell => applyDataStyle(cell, idx))
+    })
+
+    // Total row
+    const totRow = ws.addRow(['TOTAL COMPENSATORIOS', '', '', '', '', '', totalClosure])
+    ws.mergeCells(rows.length + 3, 1, rows.length + 3, 6)
+    totRow.eachCell({ includeEmpty: true }, cell => applyTotalStyle(cell))
+  }
+
+  // ===================================================
+  // SHEET 3 — Programacion (detail per day)
+  // ===================================================
+  {
+    const ws = wb.addWorksheet('Programacion')
+    const totalCols = 7
+
+    // Title
+    ws.addRow(['PROGRAMACION DE HORARIOS'])
+    ws.mergeCells(1, 1, 1, totalCols)
+    applyTitleStyle(ws.getCell(1, 1))
+    ws.getRow(1).height = 22
+
+    // Headers
+    const hdrRow = ws.addRow(['Fecha', 'Empleado', 'Cod Turno', 'H. Entrada', 'H. Salida', 'Duración', 'Tarea'])
+    hdrRow.height = 22
+    hdrRow.eachCell({ includeEmpty: true }, cell => applyHeaderStyle(cell))
+
+    // Column widths
+    ws.getColumn(1).width = 14
+    ws.getColumn(2).width = 24
+    ws.getColumn(3).width = 11
+    ws.getColumn(4).width = 16
+    ws.getColumn(5).width = 11
+    ws.getColumn(6).width = 11
+    ws.getColumn(7).width = 18
+
+    // Autofilter
+    ws.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: totalCols } }
+
+    let dataRowIdx = 0
+
+    if (globalSchedule && config) {
+      for (let d = 1; d <= daysInMonth; d++) {
+        const ds = `${yearStr}-${monthStr}-${String(d).padStart(2, '0')}`
+        const fechaStr = formatDateEs(year, month, d)
+
+        config.employees.forEach(emp => {
+          const entry = globalSchedule[emp.name]?.[ds]
+          if (!entry || (!entry.duration && !entry.startTime && !entry.code)) return
+
+          const isAbs = entry.duration && absenceCodes.includes(entry.duration)
+          let rowData
+          if (isAbs) {
+            const label    = absenceLabels[entry.duration] ?? entry.duration
+            const durHours = { 36: 6, 42: 7, 44: 8 }[emp.maxHours] ?? 8
+            rowData = [fechaStr, emp.name, entry.duration, `${label} ${durHours}H`, '', `${durHours}h`, 'Ausente']
+          } else {
+            const codeInfo  = entry.code ? SHIFT_CODE_INFO[entry.code] : null
+            const hours     = codeInfo ? codeInfo.hours : (parseInt(entry.duration) || 0)
+            const startTime = entry.startTime || (codeInfo ? codeInfo.start : '')
+            const endTime   = startTime && hours > 0
+              ? computeEndTimeWithMargin(startTime, hours, emp.jefatura ?? false)
+              : ''
+            rowData = [
+              fechaStr, emp.name,
+              entry.code || entry.duration || '',
+              startTime, endTime,
+              hours > 0 ? `${hours}h` : '',
+              entry.task || '',
+            ]
+          }
+
+          const wsRow = ws.addRow(rowData)
+          wsRow.eachCell({ includeEmpty: true }, cell => applyDataStyle(cell, dataRowIdx))
+          dataRowIdx++
+        })
+      }
+    }
+
+    // Freeze header rows
+    ws.views = [{ state: 'frozen', xSplit: 0, ySplit: 2 }]
+  }
+
+  // ─── Download ──────────────────────────────────────────────────────────────
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Resumen_${yearStr}-${monthStr}.xlsx`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }

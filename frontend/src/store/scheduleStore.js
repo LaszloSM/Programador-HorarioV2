@@ -176,6 +176,11 @@ export const useScheduleStore = create((set, get) => {
 
     // ─── Load department from app_state (same as app.html) ──
     loadDepartment: async (deptId) => {
+      const { isDirty, currentDeptId: prevDeptId, isLoading } = get()
+      // If there are unsaved changes, flush them before loading (prevents data loss on token refresh)
+      if (isDirty && !isLoading) {
+        await get()._flushSave()
+      }
       set({ currentDeptId: deptId, globalSchedule: {}, historyStack: [], isLoading: true })
 
       try {

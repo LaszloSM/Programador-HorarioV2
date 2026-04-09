@@ -59,8 +59,10 @@ export default function AppShell({ session }) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
-  // Load user profile and departments
+  // Load user profile and departments — only re-run when the actual user changes,
+  // NOT on token refreshes (which also fire onAuthStateChange but don't change user.id)
   useEffect(() => {
+    if (!session?.user?.id) return
     const init = async () => {
       // Get user profile
       const { data: profile } = await supabase
@@ -88,7 +90,7 @@ export default function AppShell({ session }) {
       loadDepartment(deptId)
     }
     init()
-  }, [session])
+  }, [session?.user?.id])
 
   const handleDeptChange = (deptId) => {
     loadDepartment(deptId)
