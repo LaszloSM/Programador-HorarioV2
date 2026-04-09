@@ -496,13 +496,14 @@ body {
   left: 0;
   right: 0;
   height: 68px;
-  background: var(--nm-surface-low);
-  border-top: 1px solid var(--nm-outline-variant);
+  background: #111827;
+  border-top: 1px solid rgba(137, 206, 255, 0.1);
   display: flex;
   align-items: stretch;
   z-index: 200;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.6);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .mobile-bottom-nav__item {
@@ -511,19 +512,24 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   background: none;
   border: none;
-  color: var(--nm-on-surface-variant);
+  color: #6b7f9a;
   cursor: pointer;
   transition: all 0.2s;
   padding: 0.5rem 0.25rem;
   position: relative;
   min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav__item:active {
+  opacity: 0.7;
 }
 
 .mobile-bottom-nav__item--active {
-  color: var(--nm-primary);
+  color: #89ceff;
 }
 
 .mobile-bottom-nav__item--active::before {
@@ -532,28 +538,29 @@ body {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 32px;
+  width: 28px;
   height: 2px;
-  background: linear-gradient(90deg, #89ceff, #0ea5e9);
-  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #38bdf8, #89ceff);
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
 }
 
 .mobile-bottom-nav__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.75rem;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.625rem;
   transition: all 0.2s;
 }
 
 .mobile-bottom-nav__item--active .mobile-bottom-nav__icon {
-  background: rgba(137, 206, 255, 0.12);
+  background: rgba(137, 206, 255, 0.14);
 }
 
 .mobile-bottom-nav__label {
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -571,8 +578,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: var(--nm-surface);
-  min-height: calc(100vh - 68px - 64px); /* minus bottom nav and header */
+  background: #0d1525;
+  min-height: calc(100vh - 68px - 64px);
 }
 
 /* Week navigation */
@@ -581,14 +588,14 @@ body {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: var(--nm-surface-low);
-  border-bottom: 1px solid var(--nm-outline-variant);
+  background: #131d32;
+  border-bottom: 1px solid rgba(137, 206, 255, 0.1);
 }
 
 .mobile-schedule__nav-btn {
-  background: rgba(137, 206, 255, 0.08);
-  border: 1px solid var(--nm-outline-variant);
-  color: var(--nm-primary);
+  background: rgba(137, 206, 255, 0.1);
+  border: 1px solid rgba(137, 206, 255, 0.2);
+  color: #89ceff;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.625rem;
@@ -602,8 +609,9 @@ body {
   flex-shrink: 0;
   line-height: 1;
 }
-.mobile-schedule__nav-btn:hover {
-  background: rgba(137, 206, 255, 0.15);
+.mobile-schedule__nav-btn:active {
+  background: rgba(137, 206, 255, 0.2);
+  transform: scale(0.95);
 }
 
 .mobile-schedule__nav-center {
@@ -616,7 +624,7 @@ body {
   font-family: var(--font-manrope);
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--nm-on-surface);
+  color: #dae2fd;
   letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
@@ -625,10 +633,10 @@ body {
 }
 
 .mobile-schedule__today-btn {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
   color: white;
   border: none;
-  padding: 0.375rem 0.75rem;
+  padding: 0.4rem 0.875rem;
   border-radius: 0.625rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -636,20 +644,21 @@ body {
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+  letter-spacing: 0.01em;
 }
-.mobile-schedule__today-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.45);
+.mobile-schedule__today-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
 }
 
 /* Filters */
 .mobile-schedule__filters {
   display: flex;
   gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: var(--nm-surface-container);
-  border-bottom: 1px solid var(--nm-outline-variant);
+  padding: 0.625rem 0.875rem;
+  background: #171f33;
+  border-bottom: 1px solid rgba(62, 72, 80, 0.5);
   align-items: center;
 }
 
@@ -658,11 +667,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--nm-surface-high);
-  border: 1px solid var(--nm-outline-variant);
+  background: #222a3d;
+  border: 1px solid rgba(62, 72, 80, 0.8);
   border-radius: 0.625rem;
-  padding: 0.375rem 0.625rem;
-  color: var(--nm-on-surface-variant);
+  padding: 0.4375rem 0.75rem;
+  color: #bec8d2;
   min-width: 0;
 }
 
@@ -670,28 +679,27 @@ body {
   background: none;
   border: none;
   outline: none;
-  color: var(--nm-on-surface);
+  color: #dae2fd;
   font-size: 0.8125rem;
   flex: 1;
   min-width: 0;
 }
 .mobile-schedule__search::placeholder {
-  color: var(--nm-on-surface-variant);
-  opacity: 0.7;
+  color: rgba(190, 200, 210, 0.5);
 }
 
 .mobile-schedule__group-select {
-  background: var(--nm-surface-high);
-  border: 1px solid var(--nm-outline-variant);
-  color: var(--nm-on-surface);
+  background: #222a3d;
+  border: 1px solid rgba(62, 72, 80, 0.8);
+  color: #dae2fd;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 0.625rem;
-  padding: 0.375rem 0.5rem;
+  padding: 0.4375rem 0.5rem;
   cursor: pointer;
   outline: none;
   flex-shrink: 0;
-  max-width: 100px;
+  max-width: 110px;
 }
 .mobile-schedule__group-select option {
   background: #1e293b;
@@ -703,27 +711,33 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  padding-bottom: 1.5rem;
 }
 
 .mobile-schedule__empty {
   text-align: center;
-  color: var(--nm-on-surface-variant);
+  color: #bec8d2;
   font-size: 0.875rem;
-  padding: 3rem 1rem;
+  padding: 3rem 1.5rem;
   line-height: 1.6;
+  background: rgba(255,255,255,0.02);
+  border-radius: 1rem;
+  border: 1px dashed rgba(62, 72, 80, 0.6);
+  margin: 1rem;
 }
 
 /* ============================================================
    EMPLOYEE MOBILE CARD
    ============================================================ */
 .mobile-emp-card {
-  background: var(--nm-surface-container);
-  border: 1px solid var(--nm-outline-variant);
-  border-radius: 1rem;
+  background: #1a2236;
+  border: 1px solid rgba(137, 206, 255, 0.08);
+  border-radius: 0.875rem;
   overflow: hidden;
   margin-bottom: 0.5rem;
-  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s;
 }
 
 .mobile-emp-card:last-child {
@@ -737,12 +751,13 @@ body {
   padding: 0.625rem 0.875rem;
   cursor: pointer;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(62, 72, 80, 0.4);
   user-select: none;
+  background: #1e2a40;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-emp-card__header:active {
-  background: rgba(137, 206, 255, 0.05);
+  background: #243050;
 }
 
 .mobile-emp-card__info {
@@ -756,24 +771,25 @@ body {
 .mobile-emp-card__name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--nm-on-surface);
+  color: #e8efff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .mobile-emp-card__meta {
-  font-size: 0.6875rem;
-  color: var(--nm-on-surface-variant);
+  font-size: 0.625rem;
+  color: #89a0b8;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .mobile-emp-card__stats {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -781,32 +797,33 @@ body {
   font-family: var(--font-manrope);
   font-size: 1rem;
   font-weight: 800;
-  color: var(--nm-on-surface);
+  color: #dae2fd;
   line-height: 1;
 }
 
 .mobile-emp-card__hours--over {
-  color: #f87171;
+  color: #fb7185;
 }
 
 .mobile-emp-card__hours-max {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  color: var(--nm-on-surface-variant);
+  color: #6b7f9a;
 }
 
 .mobile-emp-card__poliv {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  color: #0ea5e9;
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.2);
-  padding: 0.1875rem 0.4375rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.2rem 0.5rem;
   border-radius: 9999px;
+  white-space: nowrap;
 }
 
 .mobile-emp-card__chevron {
-  color: var(--nm-on-surface-variant);
+  color: #6b7f9a;
   display: flex;
   transition: transform 0.25s ease;
 }
@@ -816,27 +833,28 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0;
-  padding: 0.5rem;
-  background: var(--nm-surface-low);
+  padding: 0.5rem 0.5rem 0.625rem;
+  background: #131d32;
+  border-top: 1px solid rgba(62, 72, 80, 0.5);
 }
 
 .mobile-emp-card__day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   padding: 0 0.125rem;
 }
 
 .mobile-emp-card__day-label {
-  font-size: 0.5625rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  color: var(--nm-on-surface-variant);
+  color: #6b7f9a;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 .mobile-emp-card__day-label--fest {
-  color: #f87171;
+  color: #fb7185;
 }
 .mobile-emp-card__day-label--today {
   color: #38bdf8;
@@ -844,16 +862,23 @@ body {
 
 .mobile-emp-card__day-num {
   font-family: var(--font-manrope);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 800;
-  color: var(--nm-on-surface);
+  color: #c5d0e8;
   line-height: 1;
 }
 .mobile-emp-card__day-num--fest {
-  color: #f87171;
+  color: #fb7185;
 }
 .mobile-emp-card__day-num--today {
   color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border-radius: 9999px;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mobile-emp-card__cell {
@@ -865,65 +890,68 @@ body {
    ============================================================ */
 .mobile-shift-pill {
   width: 100%;
-  min-height: 2.625rem;
+  min-height: 2.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.1875rem 0.125rem;
+  padding: 0.25rem 0.1rem;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
-  gap: 1px;
+  gap: 2px;
 }
 
 .mobile-shift-pill:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
 }
 
 .mobile-shift-pill--empty {
-  background: var(--nm-surface-highest);
-  border: 1px dashed var(--nm-outline-variant);
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(137, 206, 255, 0.15);
+  border-radius: 0.5rem;
 }
 .mobile-shift-pill--empty:active {
-  background: rgba(137, 206, 255, 0.1);
+  background: rgba(137, 206, 255, 0.08);
+  border-color: rgba(137, 206, 255, 0.3);
 }
 
 .mobile-shift-pill__plus {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 300;
-  color: var(--nm-on-surface-variant);
-  opacity: 0.5;
+  color: rgba(137, 206, 255, 0.3);
+  line-height: 1;
 }
 
 .mobile-shift-pill--absence {
-  background: rgba(100, 116, 139, 0.25);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.28);
 }
 
 .mobile-shift-pill--filled {
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
 }
 
 .mobile-shift-pill__code {
   font-size: 0.6875rem;
   font-weight: 800;
-  color: white;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   letter-spacing: 0.02em;
   line-height: 1;
 }
 
 .mobile-shift-pill--absence .mobile-shift-pill__code {
-  color: var(--nm-on-surface-variant);
+  color: #94a3b8;
+  font-weight: 700;
   text-shadow: none;
 }
 
 .mobile-shift-pill__time {
-  font-size: 0.5625rem;
-  color: rgba(255,255,255,0.75);
+  font-size: 0.5rem;
+  color: rgba(255,255,255,0.7);
   font-weight: 600;
   line-height: 1;
 }

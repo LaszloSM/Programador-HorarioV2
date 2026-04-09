@@ -190,7 +190,7 @@ export default function DailyCoverageGantt() {
 
         <div className={`overflow-x-auto scrollbar-hide ${isMobile ? 'pb-24' : 'p-4'}`}>
           <div
-            className="min-w-[1000px] border border-nm-outline-variant/30 relative text-[10px]"
+            className="min-w-[1000px] border border-nm-outline-variant/30 relative text-[10px] isolate"
             style={{
               display: 'grid',
               gridTemplateColumns: `180px repeat(${TOTAL_SLOTS}, minmax(28px, 1fr))`,
@@ -247,22 +247,27 @@ export default function DailyCoverageGantt() {
                   {/* Task Bar - ABSOLUTE PLACEMENT */}
                   {row.span > 0 && (
                     <div
-                      className="absolute rounded-lg flex items-center px-3 shadow-lg transform transition-all hover:scale-[1.01] hover:z-40 cursor-pointer z-30"
+                      className="absolute rounded-lg flex items-center px-3 transition-all hover:brightness-110 hover:z-40 cursor-pointer z-30"
                       style={{
                         gridColumnStart: row.gridStart,
                         gridColumnEnd: `span ${row.span}`,
                         gridRow: i + 3,
                         backgroundColor: row.color,
                         height: '28px',
-                        alignSelf: 'center',
-                        margin: '0 2px',
-                        boxShadow: `0 4px 12px ${row.color}33`,
-                        border: '1px solid rgba(255,255,255,0.2)'
+                        top: '50%',
+                        left: '3px',
+                        right: '3px',
+                        bottom: 'auto',
+                        transform: 'translateY(-50%)',
+                        boxShadow: `0 3px 10px ${row.color}55`,
+                        border: '1px solid rgba(255,255,255,0.25)'
                       }}
                       title={`${row.task} (${row.startTime} - ${row.endTime})`}
                     >
-                      <span className="text-white text-[9px] font-black uppercase drop-shadow-sm truncate">
-                        {row.startTime} — {row.endTime}
+                      <span className="text-white text-[9px] font-black uppercase drop-shadow-sm truncate leading-none">
+                        {row.empGroup && <span className="opacity-80 mr-1">{row.empGroup}</span>}
+                        {row.startTime} – {row.endTime}
+                        <span className="opacity-70 ml-1">({row.hours}h)</span>
                       </span>
                     </div>
                   )}
