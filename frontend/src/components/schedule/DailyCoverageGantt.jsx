@@ -180,99 +180,128 @@ export default function DailyCoverageGantt() {
       </div>
 
       {/* ── Gantt Chart ────────────────────────── */}
-      <div className={`bg-transparent md:bg-white md:rounded-3xl shadow-premium border-b md:border border-borde/50 overflow-hidden ${isMobile ? '' : 'backdrop-blur-xl'}`}>
-        {/* Desktop Title */}
-        {!isMobile && (
-          <div className="bg-azul-50/50 border-b border-borde/50 px-6 py-4">
-            <h3 className="text-azul font-bold text-sm uppercase tracking-wider">Plan de Cobertura</h3>
-          </div>
-        )}
+      <div className={`bg-white rounded-2xl shadow-sm border border-borde/70 overflow-hidden ${isMobile ? 'mx-0 rounded-none border-x-0' : ''}`}>
+        {/* Title bar */}
+        <div className={`flex items-center justify-between px-5 py-3 border-b border-borde/60 ${isMobile ? 'bg-nm-surface-low' : 'bg-azul'}`}>
+          <h3 className={`font-bold text-sm uppercase tracking-wider ${isMobile ? 'text-nm-on-surface' : 'text-white'}`}>
+            Plan de Cobertura
+          </h3>
+          {data.list.length > 0 && (
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isMobile ? 'bg-nm-primary/15 text-nm-primary' : 'bg-white/15 text-white'}`}>
+              {data.list.length} empleados
+            </span>
+          )}
+        </div>
 
-        <div className={`overflow-x-auto scrollbar-hide ${isMobile ? 'pb-24' : 'p-4'}`}>
+        <div className={`overflow-x-auto scrollbar-hide ${isMobile ? 'pb-24' : ''}`}>
           <div
-            className="min-w-[1000px] border border-nm-outline-variant/30 relative text-[10px] isolate"
+            className="relative text-[10px] isolate"
             style={{
               display: 'grid',
-              gridTemplateColumns: `180px repeat(${TOTAL_SLOTS}, minmax(28px, 1fr))`,
+              gridTemplateColumns: `190px repeat(${TOTAL_SLOTS}, minmax(26px, 1fr))`,
+              minWidth: '900px',
               backgroundColor: isMobile ? 'var(--nm-surface-low)' : 'white'
             }}
           >
-            {/* Row 1: TOTALS */}
-            <div className="sticky left-0 bg-nm-surface-container border-b border-r border-nm-outline-variant flex items-center px-4 py-2 font-black text-nm-primary uppercase z-30">
-              Personal Total
+            {/* Row 1: TOTAL EMPLOYEES header */}
+            <div className={`sticky left-0 z-30 flex items-center px-4 py-2 border-b border-r font-black text-xs uppercase tracking-wide ${isMobile ? 'bg-nm-surface-container border-nm-outline-variant text-nm-on-surface-variant' : 'bg-slate-50 border-borde text-slate-500'}`}>
+              Total empleados
             </div>
             {data.counts.map((count, i) => (
-              <div key={i} className="bg-nm-surface-container border-b border-r border-nm-outline-variant/30 flex items-center justify-center font-black text-nm-primary text-xs py-2">
+              <div
+                key={i}
+                className={`border-b border-r flex items-center justify-center font-black text-xs py-2 ${isMobile ? 'border-nm-outline-variant/20 text-nm-primary bg-nm-surface-container' : `border-borde/40 ${count > 0 ? 'text-azul font-black' : 'text-slate-300'}`}`}
+                style={{ background: !isMobile && count > 0 && i % 2 === 0 ? '#f8fafc' : undefined }}
+              >
                 {count > 0 ? count : ''}
               </div>
             ))}
 
             {/* Row 2: TIME SLOTS */}
-            <div className="sticky left-0 bg-nm-surface-high border-b border-r border-nm-outline-variant flex items-center px-4 py-1.5 font-bold text-nm-on-surface-variant uppercase z-30">
-              Empleado
+            <div className={`sticky left-0 z-30 flex items-center px-4 py-2 border-b border-r font-black text-xs uppercase ${isMobile ? 'bg-nm-surface-high border-nm-outline-variant text-nm-on-surface-variant' : 'bg-azul border-borde text-white'}`}>
+              Nombre
             </div>
             {slots.map((slot, i) => (
-              <div key={i} className="bg-nm-surface-high border-b border-r border-nm-outline-variant/30 flex items-center justify-center font-bold text-nm-on-surface-variant py-1.5">
-                {slot.split(':')[1] === '00' ? slot : ''}
+              <div
+                key={i}
+                className={`border-b border-r flex items-center justify-center font-bold py-2 ${isMobile ? 'border-nm-outline-variant/30 text-nm-on-surface-variant bg-nm-surface-high' : `border-borde/40 bg-azul text-white/90 ${slot.split(':')[1] === '00' ? 'font-black' : 'opacity-50'}`}`}
+              >
+                {slot.split(':')[1] === '00' ? slot : '·'}
               </div>
             ))}
 
             {/* Content rows */}
             {data.list.length === 0 ? (
-              <div className="col-span-full text-center py-20 text-nm-on-surface-variant font-medium bg-nm-surface-low/50">
-                No hay turnos registrados para este grupo.
+              <div className={`col-span-full text-center py-16 font-medium text-sm ${isMobile ? 'text-nm-on-surface-variant' : 'text-slate-400'}`}>
+                No hay turnos para este grupo en este día.
               </div>
             ) : (
-              data.list.map((row, i) => (
-                <div key={i} className="contents relative z-10 group">
-                  {/* Name cell (Sticky Column) */}
-                  <div className="sticky left-0 border-b border-r border-nm-outline-variant/30 bg-nm-surface-low flex items-center px-4 py-2 z-20 group-hover:bg-nm-surface-high transition-colors">
-                    <div className="w-7 h-7 rounded-lg bg-nm-primary/10 text-nm-primary font-bold flex items-center justify-center mr-3 shrink-0 border border-nm-primary/20">
-                      {row.empName.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-bold text-nm-on-surface truncate leading-tight" title={row.empName}>{row.empName}</div>
-                      <div className="text-[9px] text-nm-on-surface-variant uppercase tracking-widest mt-0.5" title={row.task}>{row.task}</div>
-                    </div>
-                  </div>
-
-                  {/* Grid filler space */}
-                  {slots.map((_, j) => (
-                    <div key={j} className="border-b border-r border-nm-outline-variant/10 group-hover:bg-nm-surface-high/50 transition-colors">
-                       {/* Vertical hour marker lines */}
-                       {j % 2 === 0 && <div className="h-full border-l border-nm-outline-variant/5"></div>}
-                    </div>
-                  ))}
-
-                  {/* Task Bar - ABSOLUTE PLACEMENT */}
-                  {row.span > 0 && (
+              data.list.map((row, i) => {
+                const isEven = i % 2 === 0
+                const rowBg  = isMobile
+                  ? (isEven ? 'var(--nm-surface-low)' : 'var(--nm-surface-container)')
+                  : (isEven ? '#ffffff' : '#f8fafc')
+                return (
+                  <div key={i} className="contents group">
+                    {/* Name cell */}
                     <div
-                      className="absolute rounded-lg flex items-center px-3 transition-all hover:brightness-110 hover:z-40 cursor-pointer z-30"
-                      style={{
-                        gridColumnStart: row.gridStart,
-                        gridColumnEnd: `span ${row.span}`,
-                        gridRow: i + 3,
-                        backgroundColor: row.color,
-                        height: '28px',
-                        top: '50%',
-                        left: '3px',
-                        right: '3px',
-                        bottom: 'auto',
-                        transform: 'translateY(-50%)',
-                        boxShadow: `0 3px 10px ${row.color}55`,
-                        border: '1px solid rgba(255,255,255,0.25)'
-                      }}
-                      title={`${row.task} (${row.startTime} - ${row.endTime})`}
+                      className={`sticky left-0 z-20 flex items-center px-3 py-3 border-b border-r transition-colors ${isMobile ? 'border-nm-outline-variant/20' : 'border-borde/40'}`}
+                      style={{ backgroundColor: rowBg }}
                     >
-                      <span className="text-white text-[9px] font-black uppercase drop-shadow-sm truncate leading-none">
-                        {row.empGroup && <span className="opacity-80 mr-1">{row.empGroup}</span>}
-                        {row.startTime} – {row.endTime}
-                        <span className="opacity-70 ml-1">({row.hours}h)</span>
-                      </span>
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 shrink-0 text-xs font-black text-white"
+                        style={{ backgroundColor: row.color !== '#CBD5E1' ? row.color : '#64748b' }}
+                      >
+                        {row.empName.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className={`font-bold text-xs truncate leading-tight ${isMobile ? 'text-nm-on-surface' : 'text-slate-800'}`} title={row.empName}>
+                          {row.empName}
+                        </div>
+                        <div className={`text-[9px] uppercase tracking-wide mt-0.5 truncate ${isMobile ? 'text-nm-on-surface-variant' : 'text-slate-400'}`} title={row.task}>
+                          {row.task || row.empGroup}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    {/* Grid filler cells */}
+                    {slots.map((_, j) => (
+                      <div
+                        key={j}
+                        className={`border-b border-r transition-colors ${isMobile ? 'border-nm-outline-variant/10' : j % 2 === 0 ? 'border-borde/30' : 'border-borde/15'}`}
+                        style={{ backgroundColor: rowBg }}
+                      />
+                    ))}
+
+                    {/* Shift bar — absolute within grid area */}
+                    {row.span > 0 && (
+                      <div
+                        className="absolute rounded-md flex items-center px-2.5 cursor-pointer z-30 transition-all hover:brightness-105 hover:z-40 hover:shadow-lg"
+                        style={{
+                          gridColumnStart: row.gridStart,
+                          gridColumnEnd: `span ${row.span}`,
+                          gridRow: i + 3,
+                          backgroundColor: row.color !== '#CBD5E1' ? row.color : '#64748b',
+                          height: '26px',
+                          top: '50%',
+                          left: '4px',
+                          right: '4px',
+                          bottom: 'auto',
+                          transform: 'translateY(-50%)',
+                          boxShadow: `0 2px 8px ${row.color !== '#CBD5E1' ? row.color : '#64748b'}55`,
+                        }}
+                        title={`${row.task} — ${row.startTime} – ${row.endTime} (${row.hours}h)`}
+                      >
+                        <span className="text-white text-[9px] font-bold truncate leading-none drop-shadow-sm">
+                          {row.empGroup && <span className="font-black mr-1">{row.empGroup}</span>}
+                          {row.startTime} – {row.endTime}
+                          <span className="opacity-80 ml-1">({row.hours}h)</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
             )}
           </div>
         </div>
