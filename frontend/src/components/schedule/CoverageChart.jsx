@@ -97,7 +97,7 @@ export default function CoverageChart() {
   }
 
   return (
-    <div className="bg-white md:rounded-2xl border border-borde/50 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white md:rounded-2xl border border-borde/50 shadow-sm flex flex-col" style={{ overflow: 'clip', height: 'calc(100dvh - 130px)' }}>
 
       {/* ── Header ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-borde/40 bg-gradient-to-r from-azul-50/60 to-white shrink-0">
@@ -154,8 +154,8 @@ export default function CoverageChart() {
         </div>
       </div>
 
-      {/* ── Time slots ────────────────────────────────────────── */}
-      <div>
+      {/* ── Time slots — altura fija, scroll interno visible ─── */}
+      <div className="overflow-y-auto min-h-0 flex-1" style={{ maxHeight: 'calc(100dvh - 180px)' }}>
         {slots.map(({ slotTime, workers }) => {
           const isMainHour = slotTime.endsWith(':00')
           const isCurrent  = slotTime === currentSlot
