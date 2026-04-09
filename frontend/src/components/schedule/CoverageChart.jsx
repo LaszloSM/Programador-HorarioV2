@@ -155,7 +155,7 @@ export default function CoverageChart() {
       </div>
 
       {/* ── Time slots ────────────────────────────────────────── */}
-      <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+      <div>
         {slots.map(({ slotTime, workers }) => {
           const isMainHour = slotTime.endsWith(':00')
           const isCurrent  = slotTime === currentSlot
