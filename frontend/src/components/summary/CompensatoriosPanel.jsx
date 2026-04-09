@@ -103,18 +103,18 @@ export default function CompensatoriosPanel() {
         <div className="flex items-center gap-2">
             <button
                onClick={prevMonth}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-borde text-azul hover:bg-azul-50 active:scale-95 transition-all shadow-sm font-bold text-xl"
             >
               ‹
             </button>
-            <div className="flex-1 min-w-[140px] px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center">
-               <span className="text-sm font-black text-nm-on-surface tracking-tight capitalize">
+            <div className="flex-1 min-w-[160px] px-4 py-2 rounded-xl bg-white border border-borde flex items-center justify-center shadow-sm">
+               <span className="text-sm font-black text-azul tracking-tight capitalize">
                  {monthLabel}
                </span>
             </div>
             <button
                onClick={nextMonth}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-borde text-azul hover:bg-azul-50 active:scale-95 transition-all shadow-sm font-bold text-xl"
             >
               ›
             </button>

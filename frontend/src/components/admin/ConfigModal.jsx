@@ -110,35 +110,39 @@ export default function ConfigModal({ onClose }) {
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-borde/50 bg-nm-surface-low">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-borde/60 bg-azul">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-nm-primary/10 flex items-center justify-center text-xl">⚙️</div>
-             <h2 className="text-nm-on-surface font-black text-xl tracking-tight">Panel de Control</h2>
+             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                 <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+               </svg>
+             </div>
+             <h2 className="text-white font-black text-base tracking-tight">Panel de Control</h2>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-nm-surface-high transition-colors text-2xl text-nm-on-surface-variant">×</button>
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/15 transition-colors text-2xl text-white/80 hover:text-white">×</button>
         </div>
 
-        {/* Section tabs - Horizontal Scroll on Mobile */}
-        <div className="flex border-b border-borde/30 px-4 bg-white sticky top-0 z-10 overflow-x-auto scrollbar-hide">
+        {/* Section tabs */}
+        <div className="flex border-b border-borde/50 px-4 bg-white sticky top-0 z-10 overflow-x-auto scrollbar-hide">
           <div className="flex min-w-max">
             {SECTIONS.map(s => (
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
-                className={`py-4 px-5 text-xs font-black uppercase tracking-widest border-b-4 transition-all flex items-center gap-2 ${
-                   activeSection === s.id 
-                   ? 'border-nm-primary text-nm-primary bg-nm-primary/5' 
-                   : 'border-transparent text-nm-on-surface-variant hover:text-nm-on-surface'
+                className={`py-3.5 px-5 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${
+                   activeSection === s.id
+                   ? 'border-azul text-azul bg-azul-50/50'
+                   : 'border-transparent text-muted hover:text-azul/70 hover:border-borde'
                 }`}
               >
-                <span>{s.label}</span>
+                {s.label}
               </button>
             ))}
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 bg-nm-surface-low">
+        <div className="flex-1 overflow-y-auto px-6 py-6 bg-azul-50/40">
           {/* Employees */}
           {activeSection === 'employees' && (
             <div className="space-y-3">
@@ -150,12 +154,12 @@ export default function ConfigModal({ onClose }) {
                           value={emp.name}
                           onChange={e => updateEmployee(i, 'name', e.target.value)}
                           placeholder="Nombre del empleado"
-                          className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface focus:outline-none focus:ring-2 focus:ring-nm-primary/20"
+                          className="flex-1 bg-white border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-azul focus:outline-none focus:ring-2 focus:ring-azul/20"
                         />
                         <select
                           value={emp.maxHours}
                           onChange={e => updateEmployee(i, 'maxHours', Number(e.target.value))}
-                          className="bg-nm-surface-low border border-borde rounded-xl px-3 py-2.5 text-sm font-black text-nm-on-surface focus:outline-none"
+                          className="bg-white border border-borde rounded-xl px-3 py-2.5 text-sm font-black text-azul focus:outline-none"
                         >
                           {CONTRACT_OPTIONS.map(h => <option key={h} value={h}>{h}h</option>)}
                         </select>
@@ -194,12 +198,12 @@ export default function ConfigModal({ onClose }) {
                     value={task.name}
                     onChange={e => updateTask(i, 'name', e.target.value)}
                     placeholder="Eje: CAJA 01"
-                    className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface focus:outline-none"
+                    className="flex-1 bg-white border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-azul focus:outline-none"
                   />
                   <select
                     value={task.group}
                     onChange={e => updateTask(i, 'group', e.target.value)}
-                    className="bg-nm-surface-low border border-borde rounded-xl px-3 py-2.5 text-xs font-black uppercase text-nm-primary focus:outline-none max-w-[120px]"
+                    className="bg-white border border-borde rounded-xl px-3 py-2.5 text-xs font-black uppercase text-azul focus:outline-none max-w-[120px]"
                   >
                     {groups.map(g => {
                       const gName = g.name.trim() || 'Nuevo Grupo'
@@ -221,7 +225,7 @@ export default function ConfigModal({ onClose }) {
                   <input
                     value={group.name}
                     onChange={e => updateGroup(j, 'name', e.target.value)}
-                    className="flex-1 bg-nm-surface-low border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-nm-on-surface"
+                    className="flex-1 bg-white border border-borde rounded-xl px-4 py-2.5 text-sm font-bold text-azul"
                   />
                   <div className="relative w-12 h-10 group/picker overflow-hidden rounded-xl border border-borde">
                     <input
@@ -267,7 +271,7 @@ export default function ConfigModal({ onClose }) {
                               ...prev,
                               [emp.name]: parseInt(e.target.value) || 0
                             }))}
-                            className="w-24 bg-nm-surface-low border border-borde rounded-xl px-3 py-2 text-sm font-black text-center text-nm-primary focus:outline-none"
+                            className="w-24 bg-white border border-borde rounded-xl px-3 py-2 text-sm font-black text-center text-azul focus:outline-none focus:ring-2 focus:ring-azul/20"
                           />
                         </td>
                       </tr>
@@ -283,14 +287,14 @@ export default function ConfigModal({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className={`flex gap-3 px-6 py-6 border-t border-borde/50 bg-white ${isMobile ? 'pb-10' : ''}`}>
-          <button onClick={onClose} className="flex-1 bg-nm-surface-high text-nm-on-surface-variant font-black rounded-2xl py-4 text-xs uppercase tracking-widest hover:bg-nm-outline-variant/10 transition-colors">
+        <div className={`flex gap-3 px-6 py-5 border-t border-borde/60 bg-white ${isMobile ? 'pb-10' : ''}`}>
+          <button onClick={onClose} className="flex-1 bg-white text-muted font-black rounded-xl py-3 text-xs uppercase tracking-widest border border-borde hover:bg-azul-50 transition-colors">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-[2] bg-nm-primary text-white rounded-2xl py-4 text-sm font-black uppercase tracking-widest shadow-lg shadow-nm-primary/20 hover:shadow-xl active:scale-[0.98] transition-all disabled:opacity-50"
+            className="flex-[2] bg-azul text-white rounded-xl py-3 text-sm font-black uppercase tracking-widest shadow-md hover:bg-azul/90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Aplicar Cambios'}
           </button>

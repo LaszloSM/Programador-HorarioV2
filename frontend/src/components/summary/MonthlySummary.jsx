@@ -65,32 +65,31 @@ export default function MonthlySummary() {
         <div className="flex items-center gap-2">
             <button
                onClick={prevMonth}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-borde text-azul hover:bg-azul-50 active:scale-95 transition-all shadow-sm font-bold text-xl"
             >
               ‹
             </button>
-            <div className="flex-1 min-w-[140px] px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center">
-               <span className="text-sm font-black text-nm-on-surface tracking-tight">
+            <div className="flex-1 min-w-[160px] px-4 py-2 rounded-xl bg-white border border-borde flex items-center justify-center shadow-sm">
+               <span className="text-sm font-black text-azul tracking-tight capitalize">
                  {monthLabel}
                </span>
             </div>
             <button
                onClick={nextMonth}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-borde text-azul hover:bg-azul-50 active:scale-95 transition-all shadow-sm font-bold text-xl"
             >
               ›
             </button>
         </div>
-        
+
         <button
           onClick={handleExport}
-          className="flex items-center justify-center gap-2 bg-nm-primary text-white text-xs font-bold px-6 py-3 rounded-xl hover:shadow-lg active:scale-[0.98] transition-all shadow-md overflow-hidden relative group"
+          className="flex items-center justify-center gap-2 bg-azul text-white text-xs font-bold px-6 py-3 rounded-xl hover:bg-azul/90 active:scale-[0.98] transition-all shadow-md"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           Exportar Excel
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
         </button>
       </div>
 

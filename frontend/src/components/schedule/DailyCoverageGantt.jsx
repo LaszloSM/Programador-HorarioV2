@@ -126,13 +126,13 @@ export default function DailyCoverageGantt() {
            <div className="flex items-center gap-2">
             <button
                onClick={prevDay}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className={`w-10 h-10 flex items-center justify-center rounded-xl active:scale-95 transition-all font-bold text-xl ${isMobile ? 'bg-nm-surface-high text-nm-primary border border-nm-outline-variant' : 'bg-white border border-borde text-azul hover:bg-azul-50 shadow-sm'}`}
                aria-label="Día anterior"
             >
               ‹
             </button>
-            <div className="flex-1 px-4 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant flex items-center justify-center relative">
-               <span className="text-sm font-bold text-nm-on-surface capitalize truncate">
+            <div className={`flex-1 px-4 py-2 rounded-xl flex items-center justify-center relative ${isMobile ? 'bg-nm-surface-high border border-nm-outline-variant' : 'bg-white border border-borde shadow-sm'}`}>
+               <span className={`text-sm font-bold capitalize truncate ${isMobile ? 'text-nm-on-surface' : 'text-azul'}`}>
                  {isMobile ? selectedDate : dateLabel}
                </span>
                <input
@@ -144,7 +144,7 @@ export default function DailyCoverageGantt() {
             </div>
             <button
                onClick={nextDay}
-               className="w-10 h-10 flex items-center justify-center rounded-xl bg-nm-surface-high text-nm-primary border border-nm-outline-variant active:scale-95 transition-all"
+               className={`w-10 h-10 flex items-center justify-center rounded-xl active:scale-95 transition-all font-bold text-xl ${isMobile ? 'bg-nm-surface-high text-nm-primary border border-nm-outline-variant' : 'bg-white border border-borde text-azul hover:bg-azul-50 shadow-sm'}`}
                aria-label="Siguiente día"
             >
               ›
@@ -161,14 +161,14 @@ export default function DailyCoverageGantt() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 md:flex-none flex items-center gap-2 px-3 py-2 rounded-xl bg-nm-surface-high border border-nm-outline-variant">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-nm-on-surface-variant">
+          <div className={`flex-1 md:flex-none flex items-center gap-2 px-3 py-2 rounded-xl ${isMobile ? 'bg-nm-surface-high border border-nm-outline-variant' : 'bg-white border border-borde shadow-sm'}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={isMobile ? 'text-nm-on-surface-variant' : 'text-muted'}>
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
             <select
               value={filterGroup}
               onChange={e => setFilterGroup(e.target.value)}
-              className="bg-transparent text-nm-on-surface text-sm font-bold focus:outline-none flex-1 md:min-w-[140px]"
+              className={`bg-transparent text-sm font-bold focus:outline-none flex-1 md:min-w-[140px] ${isMobile ? 'text-nm-on-surface' : 'text-azul'}`}
             >
               <option value="Todos">Todos los grupos</option>
               {(config.groups || []).map(g => (
