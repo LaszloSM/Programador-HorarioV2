@@ -337,10 +337,31 @@ export const useScheduleStore = create((set, get) => {
         // Normal case: save to the current department
         await _kvSet(CONFIG_KEY, configToSave, currentDeptId)
       } else {
-        // Admin "all departments" view: save to every department so changes persist
+        // Admin "all departments" view: update ONLY shared settings (groups, tasks, groupColors)
+        // per department, preserving each dept's own employees and initialPending.
         const { data: depts } = await supabase.from('departments').select('id')
         if (depts && depts.length > 0) {
-          await Promise.all(depts.map(d => _kvSet(CONFIG_KEY, configToSave, d.id)))
+          await Promise.all(depts.map(async d => {
+            // Read current dept config to preserve its employees
+            const { data: rows } = await supabase
+              .from(APP_STATE_TABLE)
+              .select('value')
+              .eq('key', CONFIG_KEY)
+              .eq('department_id', d.id)
+              .maybeSingle()
+            const existing = rows?.value || {}
+            const deptConfig = {
+              ...existing,
+              groups: configToSave.groups,
+              tasks: configToSave.tasks,
+              groupColors: configToSave.groupColors,
+              // preserve dept-specific fields
+              employees: existing.employees || [],
+              initialPending: existing.initialPending || {},
+              employeeMaxHours: existing.employeeMaxHours || {},
+            }
+            await _kvSet(CONFIG_KEY, deptConfig, d.id)
+          }))
         }
       }
     },
