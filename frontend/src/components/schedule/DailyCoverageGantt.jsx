@@ -246,7 +246,7 @@ export default function DailyCoverageGantt() {
                     {/* Name cell */}
                     <div
                       className={`sticky left-0 z-20 flex items-center px-3 py-3 border-b border-r transition-colors ${isMobile ? 'border-nm-outline-variant/20' : 'border-borde/40'}`}
-                      style={{ backgroundColor: rowBg }}
+                      style={{ backgroundColor: rowBg, gridColumn: 1, gridRow: i + 3 }}
                     >
                       <div
                         className="w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 shrink-0 text-xs font-black text-white"
@@ -269,7 +269,7 @@ export default function DailyCoverageGantt() {
                       <div
                         key={j}
                         className={`border-b border-r transition-colors ${isMobile ? 'border-nm-outline-variant/10' : j % 2 === 0 ? 'border-borde/30' : 'border-borde/15'}`}
-                        style={{ backgroundColor: rowBg }}
+                        style={{ backgroundColor: rowBg, gridColumn: j + 2, gridRow: i + 3 }}
                       />
                     ))}
 
