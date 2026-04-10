@@ -23,7 +23,7 @@ export default function Navbar({
         {/* Desktop: All controls inline */}
         <div className="app-header__controls app-header__controls--desktop">
           {/* Department selector */}
-          {(isAdmin || isGerente) && departments.length > 0 && (
+          {isAdmin && departments.length > 0 && (
             <select
               value={currentDeptId ?? ''}
               onChange={e => onDeptChange(e.target.value === '' ? null : e.target.value)}
@@ -35,7 +35,7 @@ export default function Navbar({
               ))}
             </select>
           )}
-          {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
+          {!isAdmin && currentDeptId && departments.length > 0 && (
             <span className="app-header__dept-label">
               {departments.find(d => d.id === currentDeptId)?.name ?? ''}
             </span>
@@ -129,8 +129,8 @@ export default function Navbar({
       {/* Mobile dropdown menu */}
       {menuOpen && (
         <div className="app-header__mobile-menu">
-          {/* Department selector for admin/gerente */}
-          {(isAdmin || isGerente) && departments.length > 0 && (
+          {/* Department selector for admin only */}
+          {isAdmin && departments.length > 0 && (
             <div className="app-header__menu-item">
               <span className="app-header__menu-label">Departamento</span>
               <select
@@ -145,7 +145,7 @@ export default function Navbar({
               </select>
             </div>
           )}
-          {!isAdmin && !isGerente && currentDeptId && departments.length > 0 && (
+          {!isAdmin && currentDeptId && departments.length > 0 && (
             <div className="app-header__menu-item">
               <span className="app-header__menu-label">Departamento</span>
               <span className="app-header__dept-label">

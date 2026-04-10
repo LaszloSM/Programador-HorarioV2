@@ -71,8 +71,7 @@ export default function AppShell({ session }) {
         .eq('id', session.user.id)
         .single()
 
-      const admin = profile?.role === 'admin' ||
-        session.user.app_metadata?.role === 'admin'
+      const admin = profile?.role === 'admin'
       const gerente = profile?.role === 'gerente'
       setIsAdmin(admin)
       setIsGerente(gerente)
@@ -84,8 +83,8 @@ export default function AppShell({ session }) {
         .order('name')
       setDepartments(depts ?? [])
 
-      // Load user's department, or 'Todos' if admin/gerente
-      const deptId = (admin || gerente) ? null : (profile?.department_id ?? depts?.[0]?.id)
+      // Only admin sees all departments; gerente and basic are restricted to their own
+      const deptId = admin ? null : (profile?.department_id ?? depts?.[0]?.id)
       setUserDeptId(deptId)
       loadDepartment(deptId)
     }

@@ -172,8 +172,8 @@ export default function ConfigModal({ onClose }) {
                         </select>
                      </div>
                      <label className="flex items-center gap-3 px-1 cursor-pointer group/chk">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${emp.jefatura ? 'bg-nm-primary border-nm-primary' : 'border-nm-outline-variant/50'}`}>
-                           {emp.jefatura && <span className="text-white text-[10px]">✓</span>}
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${emp.jefatura ? 'bg-azul border-azul' : 'border-borde'}`}>
+                           {emp.jefatura && <span className="text-white text-[10px] font-bold">✓</span>}
                         </div>
                         <input
                           type="checkbox"

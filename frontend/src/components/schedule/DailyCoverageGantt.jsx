@@ -273,21 +273,20 @@ export default function DailyCoverageGantt() {
                       />
                     ))}
 
-                    {/* Shift bar — absolute within grid area */}
+                    {/* Shift bar — grid-placed, aligned to its row */}
                     {row.span > 0 && (
                       <div
-                        className="absolute rounded-md flex items-center px-2.5 cursor-pointer z-30 transition-all hover:brightness-105 hover:z-40 hover:shadow-lg"
+                        className="rounded-md flex items-center px-2.5 cursor-pointer transition-all hover:brightness-105 hover:shadow-lg"
                         style={{
+                          position: 'relative',
+                          zIndex: 30,
                           gridColumnStart: row.gridStart,
                           gridColumnEnd: `span ${row.span}`,
                           gridRow: i + 3,
+                          alignSelf: 'center',
                           backgroundColor: row.color !== '#CBD5E1' ? row.color : '#64748b',
                           height: '26px',
-                          top: '50%',
-                          left: '4px',
-                          right: '4px',
-                          bottom: 'auto',
-                          transform: 'translateY(-50%)',
+                          margin: '0 4px',
                           boxShadow: `0 2px 8px ${row.color !== '#CBD5E1' ? row.color : '#64748b'}55`,
                         }}
                         title={`${row.task} — ${row.startTime} – ${row.endTime} (${row.hours}h)`}
