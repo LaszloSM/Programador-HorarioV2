@@ -191,6 +191,10 @@ export const useScheduleStore = create((set, get) => {
 
         if (deptId !== null) {
           query = query.eq('department_id', deptId)
+        } else {
+          // FIX: excluir filas con department_id = null (datos legacy de app.html)
+          // que al mezclarse sobreescriben los datos correctos de cada departamento
+          query = query.not('department_id', 'is', null)
         }
 
         const { data, error } = await query
@@ -207,7 +211,7 @@ export const useScheduleStore = create((set, get) => {
         mergedConfig.tasks = []
 
         if (deptId === null) {
-          // If all departments, merge everything together
+          // Si se piden todos los departamentos, combinar todo
           const deptsMap = {}
             ; (data || []).forEach(row => {
               if (!deptsMap[row.department_id]) deptsMap[row.department_id] = {}
@@ -218,6 +222,14 @@ export const useScheduleStore = create((set, get) => {
             const map = deptsMap[dId]
             const cfg = map[CONFIG_KEY] || DEFAULT_CONFIG
             const sched = map[SCHEDULE_KEY] || {}
+
+            // FIX: construir el conjunto de empleados que pertenecen a ESTE departamento.
+            // Solo se mezclan entradas de horario de empleados que están en el config
+            // de su departamento. Esto evita que datos obsoletos de otro departamento
+            // sobreescriban los datos correctos (el bug "último-gana" de Object.assign).
+            const deptEmployeeNames = new Set(
+              (cfg.employees || []).map(e => e.name || e)
+            )
 
             // Merge employees
             ; (cfg.employees || []).forEach(emp => {
@@ -231,7 +243,7 @@ export const useScheduleStore = create((set, get) => {
               ...mergedConfig.initialPending,
               ...(cfg.initialPending || {})
             }
-            // Merge employee max hours 
+            // Merge employee max hours
             mergedConfig.employeeMaxHours = {
               ...mergedConfig.employeeMaxHours,
               ...(cfg.employeeMaxHours || {})
@@ -253,10 +265,14 @@ export const useScheduleStore = create((set, get) => {
                 if (!mergedConfig.groups.includes(g)) mergedConfig.groups.push(g)
               })
             }
-            // Merge schedule
+            // FIX: solo mezclar horarios de empleados que pertenecen a ESTE departamento.
+            // Si el nombre del empleado no aparece en el config de este dept, se ignora
+            // para no contaminar con datos de otras secciones o legacy.
             for (const [empName, daysMap] of Object.entries(sched)) {
-              if (!rawSchedule[empName]) rawSchedule[empName] = {}
-              Object.assign(rawSchedule[empName], daysMap)
+              if (deptEmployeeNames.has(empName)) {
+                if (!rawSchedule[empName]) rawSchedule[empName] = {}
+                Object.assign(rawSchedule[empName], daysMap)
+              }
             }
           }
         } else {
