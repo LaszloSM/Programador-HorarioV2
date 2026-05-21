@@ -59,6 +59,24 @@ export default function AppShell({ session }) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
+  // Guardia de cierre/recarga: avisa si hay cambios sin guardar todavía.
+  // El debounce de _flushSave es 800ms; si el usuario cierra antes, los datos
+  // se perderían silenciosamente. Este handler fuerza el guardado inmediato
+  // y muestra el diálogo nativo del navegador como último recurso.
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const { isDirty, currentDeptId } = useScheduleStore.getState()
+      if (!isDirty || !currentDeptId) return
+      // Intentar guardar de forma síncrona (best-effort, el navegador puede no esperar)
+      useScheduleStore.getState()._flushSave()
+      // Mostrar diálogo nativo del navegador
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
   // Load user profile and departments — only re-run when the actual user changes,
   // NOT on token refreshes (which also fire onAuthStateChange but don't change user.id)
   useEffect(() => {
