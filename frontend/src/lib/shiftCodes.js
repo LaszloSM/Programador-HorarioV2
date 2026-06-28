@@ -437,49 +437,113 @@ export const coverageTimes = [
 ];
 
 // ---------------------------------------------------------------------------
-// Festivos
-// Fuente: app.html líneas 2265-2302
+// Festivos de Colombia
+// Se calculan automáticamente para cualquier año en lugar de mantener una
+// lista fija (que había que actualizar a mano cada año y contenía errores).
+//
+// Reglas aplicadas:
+//   1. Festivos de fecha fija (no se trasladan).
+//   2. Festivos sujetos a la Ley Emiliani (se trasladan al lunes siguiente).
+//   3. Festivos basados en la Pascua: Semana Santa, Ascensión, Corpus Christi
+//      y Sagrado Corazón (estos últimos tres ya trasladados al lunes vía offset).
+//
+// Nota: los domingos los detecta isHoliday() por separado, así que no hace
+// falta incluirlos aquí.
 // ---------------------------------------------------------------------------
 
-/** Set de fechas festivas en formato "YYYY-MM-DD". */
-export const festivosSet = new Set([
-  "2025-01-01","2025-01-05","2025-01-06","2025-01-12","2025-01-19","2025-01-26",
-  "2025-02-02","2025-02-09","2025-02-16","2025-02-23",
-  "2025-03-02","2025-03-09","2025-03-16","2025-03-23","2025-03-24","2025-03-30",
-  "2025-04-06","2025-04-13","2025-04-17","2025-04-18","2025-04-20","2025-04-27",
-  "2025-05-01","2025-05-04","2025-05-11","2025-05-25",
-  "2025-06-01","2025-06-02","2025-06-08","2025-06-15","2025-06-22","2025-06-23","2025-06-29","2025-06-30",
-  "2025-07-06","2025-07-13","2025-07-20","2025-07-27",
-  "2025-08-03","2025-08-07","2025-08-10","2025-08-17","2025-08-18","2025-08-24","2025-08-31",
-  "2025-09-07","2025-09-14","2025-09-21","2025-09-28",
-  "2025-10-05","2025-10-12","2025-10-13","2025-10-19","2025-10-26",
-  "2025-11-02","2025-11-03","2025-11-09","2025-11-16","2025-11-17","2025-11-23","2025-11-30",
-  "2025-12-07","2025-12-08","2025-12-14","2025-12-21","2025-12-25","2025-12-28",
-  "2026-01-01","2026-01-04","2026-01-11","2026-01-12","2026-01-18","2026-01-25",
-  "2026-02-01","2026-02-08","2026-02-15","2026-02-22",
-  "2026-03-01","2026-03-08","2026-03-15","2026-03-22","2026-03-23","2026-03-29",
-  "2026-04-02","2026-04-03","2026-04-05","2026-04-12","2026-04-19","2026-04-26",
-  "2026-05-01","2026-05-03","2026-05-10","2026-05-17","2026-05-18","2026-05-24","2026-05-31",
-  "2026-06-07","2026-06-08","2026-06-14","2026-06-15","2026-06-21","2026-06-28","2026-06-29",
-  "2026-07-05","2026-07-12","2026-07-13","2026-07-19","2026-07-20","2026-07-26",
-  "2026-08-02","2026-08-07","2026-08-09","2026-08-16","2026-08-17","2026-08-23","2026-08-30",
-  "2026-09-06","2026-09-13","2026-09-20","2026-09-27",
-  "2026-10-04","2026-10-11","2026-10-18","2026-10-19","2026-10-25",
-  "2026-11-01","2026-11-08","2026-11-15","2026-11-16","2026-11-22","2026-11-29",
-  "2026-12-06","2026-12-08","2026-12-13","2026-12-20","2026-12-25","2026-12-27",
-  "2027-01-01","2027-01-03","2027-01-06","2027-01-10","2027-01-17","2027-01-24","2027-01-31",
-  "2027-02-07","2027-02-14","2027-02-21","2027-02-28",
-  "2027-03-07","2027-03-14","2027-03-21","2027-03-28","2027-03-29",
-  "2027-04-04","2027-04-08","2027-04-09","2027-04-11","2027-04-18","2027-04-25",
-  "2027-05-01","2027-05-02","2027-05-09","2027-05-16","2027-05-17","2027-05-23","2027-05-30",
-  "2027-06-06","2027-06-07","2027-06-13","2027-06-20","2027-06-27",
-  "2027-07-04","2027-07-11","2027-07-13","2027-07-18","2027-07-19","2027-07-20","2027-07-25",
-  "2027-08-01","2027-08-07","2027-08-08","2027-08-15","2027-08-22","2027-08-29",
-  "2027-09-03","2027-09-10","2027-09-17","2027-09-24",
-  "2027-10-01","2027-10-08","2027-10-15","2027-10-16","2027-10-22","2027-10-29","2027-10-31",
-  "2027-11-05","2027-11-12","2027-11-19","2027-11-26",
-  "2027-12-03","2027-12-10","2027-12-17","2027-12-24","2027-12-31",
-]);
+/** Formatea un Date local como "YYYY-MM-DD". */
+function ymd(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** Devuelve el lunes siguiente, o la misma fecha si ya es lunes (Ley Emiliani). */
+function nextMonday(date) {
+  const shift = (8 - date.getDay()) % 7; // lunes => 0
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + shift);
+}
+
+/** Suma días a una fecha y devuelve un nuevo Date local. */
+function addDays(date, days) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+/** Domingo de Pascua (algoritmo de Meeus/Butcher, calendario gregoriano). */
+function easterSunday(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3 = marzo, 4 = abril
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Calcula los festivos de Colombia para un año dado.
+ *
+ * @param {number} year
+ * @returns {string[]} Fechas festivas en formato "YYYY-MM-DD".
+ */
+export function colombianHolidays(year) {
+  const dates = [];
+
+  // 1. Fecha fija (no se trasladan)
+  dates.push(`${year}-01-01`); // Año Nuevo
+  dates.push(`${year}-05-01`); // Día del Trabajo
+  if (year >= 2026) dates.push(`${year}-07-13`); // Festivo decretado, vigente desde 2026
+  dates.push(`${year}-07-20`); // Día de la Independencia
+  dates.push(`${year}-08-07`); // Batalla de Boyacá
+  dates.push(`${year}-12-08`); // Inmaculada Concepción
+  dates.push(`${year}-12-25`); // Navidad
+
+  // 2. Ley Emiliani (se trasladan al lunes siguiente)
+  const emiliani = [
+    [1, 6],   // Reyes Magos
+    [3, 19],  // San José
+    [6, 29],  // San Pedro y San Pablo
+    [8, 15],  // Asunción de la Virgen
+    [10, 12], // Día de la Raza / Diversidad Étnica
+    [11, 1],  // Todos los Santos
+    [11, 11], // Independencia de Cartagena
+  ];
+  for (const [mo, d] of emiliani) {
+    dates.push(ymd(nextMonday(new Date(year, mo - 1, d))));
+  }
+
+  // 3. Basados en la Pascua (offset +43/+64/+71 ya cae en lunes)
+  const easter = easterSunday(year);
+  dates.push(ymd(addDays(easter, -3))); // Jueves Santo
+  dates.push(ymd(addDays(easter, -2))); // Viernes Santo
+  dates.push(ymd(addDays(easter, 43))); // Ascensión del Señor
+  dates.push(ymd(addDays(easter, 64))); // Corpus Christi
+  dates.push(ymd(addDays(easter, 71))); // Sagrado Corazón de Jesús
+
+  return dates;
+}
+
+/** Primer año cubierto por el calendario de festivos generado. */
+export const FESTIVOS_YEAR_START = 2020;
+/** Último año cubierto por el calendario de festivos generado. */
+export const FESTIVOS_YEAR_END = 2100;
+
+/** Set de fechas festivas en formato "YYYY-MM-DD" (Colombia), calculado. */
+export const festivosSet = new Set(
+  Array.from(
+    { length: FESTIVOS_YEAR_END - FESTIVOS_YEAR_START + 1 },
+    (_, idx) => FESTIVOS_YEAR_START + idx
+  ).flatMap(colombianHolidays)
+);
 
 // ---------------------------------------------------------------------------
 // Ausencias permitidas según tipo de día
