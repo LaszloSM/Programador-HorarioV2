@@ -451,8 +451,18 @@ export const coverageTimes = [
 // falta incluirlos aquí.
 // ---------------------------------------------------------------------------
 
-/** Formatea un Date local como "YYYY-MM-DD". */
-function ymd(date) {
+/**
+ * Formatea un Date como "YYYY-MM-DD" usando sus componentes LOCALES.
+ *
+ * Importante: NO usar date.toISOString() para esto, porque convierte a UTC y
+ * desfasa el día según la zona horaria (p. ej. en Colombia, UTC-5, una fecha
+ * con hora >= 19:00 termina en el día siguiente). Esta función siempre devuelve
+ * el día tal como se ve en la zona local.
+ *
+ * @param {Date} date
+ * @returns {string} Fecha "YYYY-MM-DD".
+ */
+export function toISODate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -518,16 +528,16 @@ export function colombianHolidays(year) {
     [11, 11], // Independencia de Cartagena
   ];
   for (const [mo, d] of emiliani) {
-    dates.push(ymd(nextMonday(new Date(year, mo - 1, d))));
+    dates.push(toISODate(nextMonday(new Date(year, mo - 1, d))));
   }
 
   // 3. Basados en la Pascua (offset +43/+64/+71 ya cae en lunes)
   const easter = easterSunday(year);
-  dates.push(ymd(addDays(easter, -3))); // Jueves Santo
-  dates.push(ymd(addDays(easter, -2))); // Viernes Santo
-  dates.push(ymd(addDays(easter, 43))); // Ascensión del Señor
-  dates.push(ymd(addDays(easter, 64))); // Corpus Christi
-  dates.push(ymd(addDays(easter, 71))); // Sagrado Corazón de Jesús
+  dates.push(toISODate(addDays(easter, -3))); // Jueves Santo
+  dates.push(toISODate(addDays(easter, -2))); // Viernes Santo
+  dates.push(toISODate(addDays(easter, 43))); // Ascensión del Señor
+  dates.push(toISODate(addDays(easter, 64))); // Corpus Christi
+  dates.push(toISODate(addDays(easter, 71))); // Sagrado Corazón de Jesús
 
   return dates;
 }

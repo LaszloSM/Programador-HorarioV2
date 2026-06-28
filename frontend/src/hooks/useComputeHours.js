@@ -1,5 +1,5 @@
 import { useScheduleStore } from '../store/scheduleStore'
-import { SHIFT_CODE_INFO, absenceCodes } from '../lib/shiftCodes'
+import { SHIFT_CODE_INFO, absenceCodes, toISODate } from '../lib/shiftCodes'
 
 /**
  * Returns a function that computes weekly hours for an employee
@@ -16,7 +16,7 @@ export function useComputeHours() {
     const entries = []
     const cur = new Date(startDate)
     while (cur <= endDate) {
-      const dateKey = cur.toISOString().slice(0, 10)
+      const dateKey = toISODate(cur)
       entries.push(empSchedule[dateKey] ?? null)
       cur.setDate(cur.getDate() + 1)
     }

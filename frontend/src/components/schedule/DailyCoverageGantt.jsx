@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
-import { SHIFT_CODE_INFO, absenceCodes, computeEndTimeWithMargin } from '../../lib/shiftCodes'
+import { SHIFT_CODE_INFO, absenceCodes, computeEndTimeWithMargin, toISODate } from '../../lib/shiftCodes'
 
 function timeToMinutes(t) {
   if (!t) return null
@@ -30,7 +30,7 @@ function useIsMobile() {
 }
 
 export default function DailyCoverageGantt() {
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()))
   const config = useScheduleStore(s => s.config)
   const isMobile = useIsMobile()
   const [filterGroup, setFilterGroup] = useState(config.groups?.[0] || 'Todos')
@@ -107,16 +107,16 @@ export default function DailyCoverageGantt() {
   const prevDay = () => {
     const d = new Date(`${selectedDate}T12:00:00`)
     d.setDate(d.getDate() - 1)
-    setSelectedDate(d.toISOString().slice(0, 10))
+    setSelectedDate(toISODate(d))
   }
 
   const nextDay = () => {
     const d = new Date(`${selectedDate}T12:00:00`)
     d.setDate(d.getDate() + 1)
-    setSelectedDate(d.toISOString().slice(0, 10))
+    setSelectedDate(toISODate(d))
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = toISODate(new Date())
 
   return (
     <div className={`p-0 ${isMobile ? 'space-y-0' : 'space-y-6'}`}>

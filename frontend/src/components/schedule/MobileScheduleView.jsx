@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
 import { useComputeHours } from '../../hooks/useComputeHours'
 import { useComputePoliv } from '../../hooks/useComputePoliv'
-import { isHoliday } from '../../lib/shiftCodes'
+import { isHoliday, toISODate } from '../../lib/shiftCodes'
 import { SHIFT_CODE_INFO, absenceCodes, absenceLabels, computeEndTimeWithMargin } from '../../lib/shiftCodes'
 import EditShiftModal from './EditShiftModal'
 import ContextMenu from './ContextMenu'
@@ -30,9 +30,8 @@ function getWeekDates(startDate) {
   return dates
 }
 
-function toISO(date) {
-  return date.toISOString().slice(0, 10)
-}
+// Usa componentes locales (no UTC) para evitar el desfase de un día.
+const toISO = toISODate
 
 function MobileShiftPill({ empName, dateKey, onClick, onContextMenu }) {
   const entry = useScheduleStore(s => s.globalSchedule[empName]?.[dateKey])
