@@ -9,6 +9,7 @@ import {
   allowedFestivo,
   allowedNormal,
   festivosSet,
+  colombianHolidays,
   computeEndTimeWithMargin,
   isHoliday,
 } from '../shiftCodes'
@@ -136,6 +137,50 @@ describe('festivosSet', () => {
 
   it('tiene más de 150 fechas', () => {
     expect(festivosSet.size).toBeGreaterThan(150)
+  })
+
+  it('incluye el 13 de julio (lunes) desde 2026', () => {
+    expect(festivosSet.has('2026-07-13')).toBe(true)
+    expect(festivosSet.has('2027-07-13')).toBe(true)
+  })
+})
+
+// ─── colombianHolidays ──────────────────────────────────────────────────────
+
+describe('colombianHolidays', () => {
+  it('incluye festivos de fecha fija', () => {
+    const h = colombianHolidays(2026)
+    expect(h).toContain('2026-01-01') // Año Nuevo
+    expect(h).toContain('2026-05-01') // Día del Trabajo
+    expect(h).toContain('2026-07-20') // Independencia
+    expect(h).toContain('2026-08-07') // Batalla de Boyacá
+    expect(h).toContain('2026-12-08') // Inmaculada
+    expect(h).toContain('2026-12-25') // Navidad
+  })
+
+  it('agrega el 13 de julio solo desde 2026', () => {
+    expect(colombianHolidays(2025)).not.toContain('2025-07-13')
+    expect(colombianHolidays(2026)).toContain('2026-07-13')
+    expect(colombianHolidays(2027)).toContain('2027-07-13')
+  })
+
+  it('aplica la Ley Emiliani: traslada al lunes siguiente', () => {
+    // 2025-03-19 (San José) es miércoles -> lunes 2025-03-24
+    expect(colombianHolidays(2025)).toContain('2025-03-24')
+    // 2026-10-12 (Día de la Raza) ya es lunes -> no se traslada
+    expect(colombianHolidays(2026)).toContain('2026-10-12')
+    // 2026-11-01 (Todos los Santos) es domingo -> lunes 2026-11-02
+    expect(colombianHolidays(2026)).toContain('2026-11-02')
+  })
+
+  it('calcula los festivos basados en la Pascua', () => {
+    // Pascua 2025 = 20 abril
+    const h = colombianHolidays(2025)
+    expect(h).toContain('2025-04-17') // Jueves Santo
+    expect(h).toContain('2025-04-18') // Viernes Santo
+    expect(h).toContain('2025-06-02') // Ascensión
+    expect(h).toContain('2025-06-23') // Corpus Christi
+    expect(h).toContain('2025-06-30') // Sagrado Corazón
   })
 })
 
