@@ -10,6 +10,7 @@ import {
   allowedNormal,
   festivosSet,
   colombianHolidays,
+  toISODate,
   computeEndTimeWithMargin,
   isHoliday,
 } from '../shiftCodes'
@@ -181,6 +182,22 @@ describe('colombianHolidays', () => {
     expect(h).toContain('2025-06-02') // Ascensión
     expect(h).toContain('2025-06-23') // Corpus Christi
     expect(h).toContain('2025-06-30') // Sagrado Corazón
+  })
+})
+
+// ─── toISODate ──────────────────────────────────────────────────────────────
+
+describe('toISODate', () => {
+  it('usa la fecha LOCAL, no UTC (sin desfase nocturno)', () => {
+    // Una fecha por la noche NO debe correrse al día siguiente como pasaría
+    // con toISOString() en zonas horarias negativas (p. ej. Colombia, UTC-5).
+    expect(toISODate(new Date(2026, 6, 13, 23, 30, 0))).toBe('2026-07-13') // 13 jul
+    expect(toISODate(new Date(2026, 6, 13, 0, 0, 0))).toBe('2026-07-13')
+    expect(toISODate(new Date(2026, 5, 29, 20, 0, 0))).toBe('2026-06-29') // lunes festivo
+  })
+
+  it('rellena con ceros mes y día', () => {
+    expect(toISODate(new Date(2026, 0, 5))).toBe('2026-01-05')
   })
 })
 

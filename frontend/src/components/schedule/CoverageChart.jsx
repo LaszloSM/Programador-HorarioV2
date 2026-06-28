@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useScheduleStore } from '../../store/scheduleStore'
-import { SHIFT_CODE_INFO, coverageTimes, absenceCodes, computeEndTimeWithMargin } from '../../lib/shiftCodes'
+import { SHIFT_CODE_INFO, coverageTimes, absenceCodes, computeEndTimeWithMargin, toISODate } from '../../lib/shiftCodes'
 
 function timeToMinutes(t) {
   if (!t) return null
@@ -34,10 +34,10 @@ function getCurrentTimeSlot() {
 }
 
 export default function CoverageChart() {
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()))
   const globalSchedule = useScheduleStore(s => s.globalSchedule)
   const config = useScheduleStore(s => s.config)
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = toISODate(new Date())
   const isToday = selectedDate === todayStr
   const currentSlot = isToday ? getCurrentTimeSlot() : null
 

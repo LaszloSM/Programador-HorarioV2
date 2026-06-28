@@ -5,7 +5,7 @@ import {
 import { useScheduleStore } from '../../store/scheduleStore'
 import { useComputeHours } from '../../hooks/useComputeHours'
 import { useComputePoliv } from '../../hooks/useComputePoliv'
-import { isHoliday } from '../../lib/shiftCodes'
+import { isHoliday, toISODate } from '../../lib/shiftCodes'
 import ShiftCell from './ShiftCell'
 import EditShiftModal from './EditShiftModal'
 import ContextMenu from './ContextMenu'
@@ -31,9 +31,9 @@ function getWeekDates(startDate) {
   return dates
 }
 
-function toISO(date) {
-  return date.toISOString().slice(0, 10)
-}
+// Alias local para mantener el resto del componente sin cambios.
+// Usa componentes locales (no UTC) para evitar el desfase de un día.
+const toISO = toISODate
 
 function getMonday(date) {
   const d = new Date(date)
